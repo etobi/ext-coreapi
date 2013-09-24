@@ -57,6 +57,28 @@ class Tx_Coreapi_Command_DatabaseApiCommandController extends Tx_Extbase_MVC_Con
 			$this->quit();
 		}
 	}
+
+	/**
+	 *  Remove deleted records
+	 *
+	 * @author Christoph Lehmann <post@christophlehmann.eu>
+	 * @param string $age records will be removed when they were deleted before $age
+	 * @return void
+	 */
+	public function removeDeletedRecordsCommand($age) {
+		if($age === 'help') {
+			$this->outputLine('Please provide a minimum age like "7d" for 7 days, "4w" for 4 weeks or "2y" for 2 years.');
+		} else {
+			try {
+				$service = $this->objectManager->get('Tx_Coreapi_Service_DatabaseApiService');
+				$service->removeDeletedRecords($age);
+			} catch (Exception $e) {
+				$this->outputLine($e->getMessage());
+				$this->quit();
+			}
+		}
+	}
+
 }
 
 ?>
