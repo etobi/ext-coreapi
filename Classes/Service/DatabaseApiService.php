@@ -61,10 +61,11 @@ class Tx_Coreapi_Service_DatabaseApiService {
 	 * Database compare
 	 *
 	 * @param string $actions comma separated list of IDs
+	 * @param boolean $dry dry run
 	 * @return array
 	 * @throws InvalidArgumentException
 	 */
-	public function databaseCompare($actions) {
+	public function databaseCompare($actions, $dry = FALSE) {
 		$errors = array();
 
 		$availableActions = array_flip(t3lib_div::makeInstance('Tx_Extbase_Reflection_ClassReflection', 'Tx_Coreapi_Service_DatabaseApiService')->getConstants());
@@ -81,7 +82,6 @@ class Tx_Coreapi_Service_DatabaseApiService {
 			}
 			$allowedActions[$split] = 1;
 		}
-
 
 		$tblFileContent = t3lib_div::getUrl(PATH_t3lib . 'stddb/tables.sql');
 
@@ -116,41 +116,81 @@ class Tx_Coreapi_Service_DatabaseApiService {
 			$results = array();
 
 			if ($allowedActions[self::ACTION_UPDATE_CLEAR_TABLE] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($update_statements['clear_table'], $allowedRequestKeys);
+				if ($dry) {
+					$results['clear_table'] = $update_statements['clear_table'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($update_statements['clear_table'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_UPDATE_ADD] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($update_statements['add'], $allowedRequestKeys);
+				if ($dry) {
+					$results['add'] = $update_statements['add'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($update_statements['add'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_UPDATE_CHANGE] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($update_statements['change'], $allowedRequestKeys);
+				if ($dry) {
+					$results['update_change'] = $update_statements['change'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($update_statements['change'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_REMOVE_CHANGE] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['change'], $allowedRequestKeys);
+				if ($dry) {
+					$results['remove_change'] = $remove_statements['change'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['change'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_REMOVE_DROP] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['drop'], $allowedRequestKeys);
+				if ($dry) {
+					$results['drop'] = $remove_statements['drop'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['drop'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_UPDATE_CREATE_TABLE] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($update_statements['create_table'], $allowedRequestKeys);
+				if ($dry) {
+					$results['create_table'] = $update_statements['create_table'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($update_statements['create_table'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_REMOVE_CHANGE_TABLE] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['change_table'], $allowedRequestKeys);
+				if ($dry) {
+					$results['change_table'] = $remove_statements['change_table'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['change_table'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_REMOVE_DROP_TABLE] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['drop_table'], $allowedRequestKeys);
+				if ($dry) {
+					$results['drop_table'] = $remove_statements['drop_table'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['drop_table'], $allowedRequestKeys);
+				}
 			}
 
-			foreach ($results as $resultSet) {
-				if (is_array($resultSet)) {
-					foreach ($resultSet as $key => $errorMessage) {
-						$errors[$key] = $errorMessage;
+			if ($dry) {
+				foreach ($results as $key => $resultSet) {
+					if (!empty($resultSet)) {
+						$errors[$key] = $resultSet;
+					}
+				}
+			} else {
+				foreach ($results as $resultSet) {
+					if (is_array($resultSet)) {
+						foreach ($resultSet as $key => $line) {
+							$errors[$key] = $line;
+						}
 					}
 				}
 			}
@@ -161,6 +201,7 @@ class Tx_Coreapi_Service_DatabaseApiService {
 
 	/**
 	 * Get all available actions
+	 *
 	 * @return array
 	 */
 	public function databaseCompareAvailableActions() {

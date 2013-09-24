@@ -90,6 +90,7 @@ Currently the following commands are supported:
 
 	/**
 	 * Starts the script
+	 *
 	 * @return void
 	 */
 	public function start() {
@@ -113,7 +114,7 @@ Currently the following commands are supported:
 			$method = new ReflectionMethod(get_class($this), $command);
 
 			//check number of required arguments
-			if ($method->getNumberOfRequiredParameters() !== count($args)) {
+			if ($method->getNumberOfRequiredParameters() > count($args)) {
 				throw new InvalidArgumentException('Wrong number of arguments');
 			}
 
@@ -197,16 +198,35 @@ Currently the following commands are supported:
 	 * Leave the argument 'actions' empty or use "help" to see the available ones
 	 *
 	 * @param string $actions List of actions which will be executed
+	 * @param boolean $dry If set, only a dry run is done
 	 * @return void
 	 * @example ./cli_dispatch.phpsh coreapi database:databasecompare 2
 	 */
-	public function databaseDatabasecompareCommand($actions) {
+	public function databaseDatabasecompareCommand($actions, $dry = FALSE) {
 		$databaseApiService = $this->getDatabaseApiService();
 		if ($actions === 'help') {
 			$actions = $databaseApiService->databaseCompareAvailableActions();
 			$this->outputTable($actions);
 		} else {
-			$databaseApiService->databaseCompare($actions);
+			$result = $databaseApiService->databaseCompare($actions, (boolean)$dry);
+			if ($dry) {
+				$this->outputLine('DB compare would execute the following queries:');
+				foreach ($result as $key => $set) {
+					$this->outputLine(sprintf('### Action: %s ###', $key));
+					$this->outputDivider();
+					foreach ($set as $line) {
+						$this->outputLine($line);
+					}
+					$this->outputDivider();
+				}
+			} else {
+				if (empty($result)) {
+					$this->outputLine('DB has been compared');
+				} else {
+					$this->outputLine('DB could not be compared, Error(s): %s', array(LF . implode(LF, $result)));
+					$this->quit();
+				}
+			}
 		}
 	}
 
@@ -224,7 +244,7 @@ Currently the following commands are supported:
 		$data = $extensionApiService->getExtensionInformation($extkey);
 		$this->outputLine('');
 		$this->outputLine('EXTENSION "%s": %s %s', array(strtoupper($extkey), $data['em_conf']['version'], $data['em_conf']['state']));
-		$this->outputLine(str_repeat('-', self::MAXIMUM_LINE_LENGTH));
+		$this->outputDivider();
 
 		$outputInformation = array();
 		$outputInformation['is installed'] = ($data['is_installed'] ? 'yes' : 'no');
@@ -410,6 +430,7 @@ Currently the following commands are supported:
 
 	/**
 	 * Ensure upload folders of installed extensions exist
+	 *
 	 * @return void
 	 */
 	public function extensionCreateuploadfoldersCommand() {
@@ -474,11 +495,15 @@ Currently the following commands are supported:
 	 * @return void
 	 */
 	protected function outputTable(array $input) {
-		$this->outputLine(str_repeat('-', self::MAXIMUM_LINE_LENGTH));
+		$this->outputDivider();
 		foreach ($input as $key => $value) {
 			$line = wordwrap($value, self::MAXIMUM_LINE_LENGTH - 43, PHP_EOL . str_repeat(' ', 43), TRUE);
 			$this->outputLine('%-2s%-40s %s', array(' ', $key, $line));
 		}
+		$this->outputDivider();
+	}
+
+	protected function outputDivider() {
 		$this->outputLine(str_repeat('-', self::MAXIMUM_LINE_LENGTH));
 	}
 
@@ -501,9 +526,9 @@ Currently the following commands are supported:
 	 */
 	public function cli_help() {
 		if (isset($this->cli_args['_DEFAULT'][1]) &&
-				$this->cli_args['_DEFAULT'][1] === 'help' &&
-				isset($this->cli_args['_DEFAULT'][2]) &&
-				strpos($this->cli_args['_DEFAULT'][2], ':') !== FALSE
+			$this->cli_args['_DEFAULT'][1] === 'help' &&
+			isset($this->cli_args['_DEFAULT'][2]) &&
+			strpos($this->cli_args['_DEFAULT'][2], ':') !== FALSE
 		) {
 			$this->setHelpFromDocComment($this->cli_args['_DEFAULT'][2]);
 		} else {
@@ -599,9 +624,9 @@ Currently the following commands are supported:
 				}
 
 				$offset = array_search('options', array_keys($this->cli_help));
-				$this->cli_help = array_slice($this->cli_help, 0, $offset, true) +
-						array('arguments' => LF . implode(LF, $tmp)) +
-						array_slice($this->cli_help, $offset, NULL, true);
+				$this->cli_help = array_slice($this->cli_help, 0, $offset, TRUE) +
+					array('arguments' => LF . implode(LF, $tmp)) +
+					array_slice($this->cli_help, $offset, NULL, TRUE);
 			}
 
 			//set synopsis for this
