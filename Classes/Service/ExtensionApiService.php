@@ -506,6 +506,7 @@ class Tx_Coreapi_Service_ExtensionApiService {
 			throw new InvalidArgumentException(sprintf('File "%s" is empty!', $file));
 		}
 
+		$this->initializeExtensionManagerObjects();
 		$fetchData = $this->terConnection->decodeExchangeData($fileContent);
 		if (!is_array($fetchData)) {
 			throw new InvalidArgumentException(sprintf('File "%s" is of a wrong format!', $file));
