@@ -48,11 +48,11 @@ class Tx_Coreapi_Service_Core60_ExtensionApiService implements Tx_Coreapi_Servic
 	 *
 	 * @param string $extensionKey extension key
 	 * @return array
-	 * @throws InvalidArgumentException
+	 * @author Christoph Lehmann <post@christophlehmann.eu>
 	 */
 	public function getExtensionInformation($extensionKey) {
-		// TODO
-		throw new RuntimeException('This feature is not available in this TYPO3 version (yet)!');
+		$oldService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance("Tx_Coreapi_Service_Core45_ExtensionApiService");
+		return $oldService->getExtensionInformation($extensionKey);
 	}
 
 	/**
@@ -100,12 +100,13 @@ class Tx_Coreapi_Service_Core60_ExtensionApiService implements Tx_Coreapi_Servic
 	 * Update the mirrors
 	 *
 	 * @return void
-	 * @see tx_em_Tasks_UpdateExtensionList
+	 * @author Christoph Lehmann <post@christophlehmann.eu>
 	 * @throws RuntimeException
 	 */
 	public function updateMirrors() {
-		// TODO
-		throw new RuntimeException('This feature is not available in this TYPO3 version (yet)!');
+		/** @var $repositoryHelper \TYPO3\CMS\Extensionmanager\Utility\Repository\Helper */
+		$repositoryHelper = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\Repository\\Helper');
+		$repositoryHelper->updateExtList();
 	}
 
 	/**
@@ -194,11 +195,72 @@ class Tx_Coreapi_Service_Core60_ExtensionApiService implements Tx_Coreapi_Servic
 	 * @param string $extensionKey extension key
 	 * @param array $extensionConfiguration
 	 * @return void
+	 * @author Christoph Lehmann <post@christophlehmann.eu>
 	 * @throws RuntimeException
 	 * @throws InvalidArgumentException
 	 */
 	public function configureExtension($extensionKey, $extensionConfiguration = array()) {
-		throw new RuntimeException('This feature is not available in this TYPO3 version (yet)!');
+		// check if extension is loaded
+		if (!\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($extensionKey)) {
+			throw new InvalidArgumentException(sprintf('Extension "%s" is not installed!', $extensionKey));
+		}
+
+		$extAbsPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($extensionKey);
+		$extConfTemplateFile = $extAbsPath . 'ext_conf_template.txt';
+		if (!file_exists($extConfTemplateFile)) {
+			throw new InvalidArgumentException(sprintf('Extension "%s" has no configuration options!', $extensionKey));
+		}
+
+		$rawConfigurationString = file_get_contents($extConfTemplateFile);
+
+		$tsStyleConfig = $this->objectManager->get('TYPO3\\CMS\\Core\\TypoScript\\ConfigurationForm');
+		$tsStyleConfig->doNotSortCategoriesBeforeMakingForm = TRUE;
+
+		$constants = array();
+		$extRelPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath($extensionKey);($extensionKey);
+		$constants = $tsStyleConfig->ext_initTSstyleConfig(
+			$rawConfigurationString,
+			$extRelPath,
+			$extAbsPath,
+			$GLOBALS['BACK_PATH']
+		);
+
+		// check for unknown configuration settings
+		foreach ($extensionConfiguration as $key => $value) {
+			if (!isset($constants[$key])) {
+				throw new InvalidArgumentException(sprintf('No configuration setting with name "%s" for extension "%s"!', $key, $extensionKey));
+			}
+		}
+
+		// get existing configuration
+		$configurationArray = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$extensionKey]);
+		$configurationArray = is_array($configurationArray) ? $configurationArray : array();
+
+		// fill with missing values
+		foreach (array_keys($constants) as $key) {
+			if (!isset($extensionConfiguration[$key])) {
+				if (isset($configurationArray[$key])) {
+					$extensionConfiguration[$key] = $configurationArray[$key];
+				} else {
+					if (!empty($constants[$key]['value'])) {
+						$extensionConfiguration[$key] = $constants[$key]['value'];
+					} else {
+						$extensionConfiguration[$key] = $constants[$key]['default_value'];
+					}
+				}
+			}
+		}
+
+		// process incoming configuration
+		// values are checked against types in $constants
+		$tsStyleConfig->ext_procesInput(array('data' => $extensionConfiguration), array(), $constants, array());
+
+		// current configuration is merged with incoming configuration
+		$configurationArray = $tsStyleConfig->ext_mergeIncomingWithExisting($configurationArray);
+
+		// Write configuration and clear caches
+		$configurationUtility = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\ConfigurationUtility');
+		$configurationUtility->writeConfiguration($configurationArray, $extensionKey);
 	}
 
 	/**
@@ -223,8 +285,8 @@ class Tx_Coreapi_Service_Core60_ExtensionApiService implements Tx_Coreapi_Servic
 	 * @param string $file path to t3x file
 	 * @param string $location where to import the extension. S = typo3/sysext, G = typo3/ext, L = typo3conf/ext
 	 * @param bool $overwrite overwrite the extension if it already exists
+	 * @throws RuntimeException
 	 * @return void
-	 * @throws InvalidArgumentException
 	 */
 	public function importExtension($file, $location = 'L', $overwrite = FALSE) {
 		// TODO
