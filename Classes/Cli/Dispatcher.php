@@ -439,6 +439,37 @@ Currently the following commands are supported:
 	}
 
 	/**
+	 * Language Update for 4.5
+	 *
+	 * Updates the language files
+	 * @author Martin Tillmann <mtillmann@gmail.com>
+	 * @param string $be_admin Backend admin username
+	 * @param string $ter_key key of TER mirror
+	 *
+	 * @return void
+	 * @example ./cli_dispatch.phpsh coreapi language:updateTranslation45 admin ter.cablan.net
+	 */
+	public function languageUpdatetranslation45Command($be_admin, $ter_key) {
+		$languageApiService = $this->getLanguageApiService();
+		$infos = $languageApiService->updateAllTranslations45($be_admin, $ter_key);
+		$this->outputTable($infos);
+	}
+	/**
+	 * Language Update
+	 *
+	 * Updates the language files
+	 *
+	 * @return void
+	 * @example ./cli_dispatch.phpsh coreapi language:updateTranslation
+	 */
+	public function languageUpdatetranslationCommand($be_admin, $ter_key) {
+		$languageApiService = $this->getLanguageApiService();
+		$infos = $languageApiService->updateAllTranslations();
+		$this->outputTable($infos);
+	}
+
+
+	/**
 	 * Create a sys news
 	 *
 	 * Sys news record is displayed at the login page
@@ -644,6 +675,16 @@ Currently the following commands are supported:
 		$siteApiService = t3lib_div::makeInstance('Tx_Coreapi_Service_SiteApiService');
 		return $siteApiService;
 	}
+
+	/**
+	 * @return Tx_Coreapi_Service_LanguageApiService
+	 */
+	protected function getLanguageApiService() {
+		$languageApiService = t3lib_div::makeInstance('Tx_Coreapi_Service_LanguageApiService');
+		return $languageApiService;
+	}
+
+	
 }
 
 ?>
