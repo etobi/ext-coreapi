@@ -154,7 +154,6 @@ class Tx_Coreapi_Service_LanguageApiService {
             foreach($installedExtensions as $extkey){
                 $fauxEm->translation->installTranslationsForExtension($extkey,$mirrorUrl);
                 $opt[$language.' attempted']++;
-                break;
             }
             $existingTranslations = glob(PATH_typo3conf.'l10n/'.$language.'/*', GLOB_ONLYDIR);
             $opt[$language.' existing'] = count($existingTranslations);
