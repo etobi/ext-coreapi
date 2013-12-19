@@ -154,14 +154,77 @@ class Tx_Coreapi_Service_LanguageApiService {
             foreach($installedExtensions as $extkey){
                 $fauxEm->translation->installTranslationsForExtension($extkey,$mirrorUrl);
                 $opt[$language.' attempted']++;
+                $this->checkUnzipGlitch($language, $extkey);
             }
             $existingTranslations = glob(PATH_typo3conf.'l10n/'.$language.'/*', GLOB_ONLYDIR);
             $opt[$language.' existing'] = count($existingTranslations);
         }
+        t3lib_div::fixPermissions(PATH_typo3conf . 'l10n', TRUE);
 
         return $opt;
     }
-    
+
+    /**
+     * Check for and fix a glitch that 
+     * unzips the contents to the destination folder
+     * but creates the folder twice:
+     * 
+     * correct : l10n/de/tt_news/<contents>
+     * wrong   : l10n/de/tt_news/tt_news/<contents>
+     * 
+     * @param string $language the language
+     * @param string $extkey ext key of the extension
+     *
+     */    
+    public function checkUnzipGlitch($language, $extkey){
+        $contents = glob(PATH_typo3conf.'l10n/'.$language.'/'.$extkey.'/*');
+        if( count($contents) === 1 ){
+            $test = explode(DIRECTORY_SEPARATOR,$contents[0]);
+            $a = array_pop($test);
+            $b = array_pop($test);
+            if($a === $b){
+                //apparently the unzip glitch has happened. move everything up
+
+                $faultyDir = $contents[0];
+                $correctDir = preg_replace('/\/'.$a.'$/','',$faultyDir);
+                $this->rmove($faultyDir, $correctDir);
+            }
+        }
+    }
+
+    /**
+     * Recursively move files from one directory to another
+     * @author Ben Lobaugh (http://ben.lobaugh.net/blog/864/php-5-recursively-move-or-copy-files)
+     * 
+     * @param String $src - Source of files being moved
+     * @param String $dest - Destination of files being moved
+     */
+    public function rmove($src, $dest){
+     
+        // If source is not a directory stop processing
+        if(!is_dir($src)) return false;
+     
+        // If the destination directory does not exist create it
+        if(!is_dir($dest)) { 
+            if(!mkdir($dest)) {
+                // If the destination directory could not be created stop processing
+                return false;
+            }    
+        }
+     
+        // Open the source directory to read in files
+        $i = new DirectoryIterator($src);
+        foreach($i as $f) {
+            if($f->isFile()) {
+                rename($f->getRealPath(), "$dest/" . $f->getFilename());
+            } else if(!$f->isDot() && $f->isDir()) {
+                $this->rmove($f->getRealPath(), "$dest/$f");
+                unlink($f->getRealPath());
+            }
+        }
+        unlink($src);
+    }
+
     /**
      * Update all extension translations
      *
