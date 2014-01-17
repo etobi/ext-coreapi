@@ -644,6 +644,15 @@ Currently the following commands are supported:
 		$siteApiService = t3lib_div::makeInstance('Tx_Coreapi_Service_SiteApiService');
 		return $siteApiService;
 	}
+
+	/**
+	 * @return Tx_Coreapi_Service_LanguageApiService
+	 */
+
+	protected function getLanguageApiService() {
+		$languageApiService = t3lib_div::makeInstance('Tx_Coreapi_Service_LanguageApiService');
+		return $languageApiService;
+	}
 }
 
 ?>
