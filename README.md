@@ -21,12 +21,14 @@ Checkout the project website at forge.typo3.org:
 	* fetch an extension from TER
 	* import an extension
 	* install / uninstall extension
-	* create upload folders        
+	* create upload folders
 	* configure extension
 * SiteApi
 	* info
 	* createSysNews
-	
+* LanguageApi
+	* update all translations
+
 #### planned/comming soon
 
 * Backend
@@ -62,7 +64,7 @@ This will show you all available calls
 #### TYPO3 4.6 and below ####
 If you are using 4.5 or 4.6, you can still use the extension with a call like
 	./typo3/cli_dispatch.phpsh coreapi cache:clearallcaches
-	
+
 	# list all available commands:
    	./typo3/cli_dispatch.phpsh coreapi help
 
