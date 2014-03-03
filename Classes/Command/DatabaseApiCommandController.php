@@ -57,6 +57,22 @@ class Tx_Coreapi_Command_DatabaseApiCommandController extends Tx_Extbase_MVC_Con
 			$this->quit();
 		}
 	}
+
+	/**
+	 * Import ext_tables_static+adt.sql from extensionmanager
+	 */
+	public function importExtensionManagerRepositoryCommand() {
+		/** @var $service Tx_Coreapi_Service_DatabaseApiService */
+		$service = $this->objectManager->get('Tx_Coreapi_Service_DatabaseApiService');
+
+		$result = $service->importExtensionManagerRepository();
+		if ($result) {
+			$this->outputLine('Static data has been imported');
+		} else {
+			$this->outputLine('Static data could not ne imported, Error(s): %s', array(LF . implode(LF, $result)));
+			$this->quit();
+		}
+	}
 }
 
 ?>
