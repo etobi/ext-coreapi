@@ -40,13 +40,13 @@ class Tx_Coreapi_Service_CacheApiService {
 	 */
 	public function initializeObject() {
 		// Create a fake admin user
-		$adminUser = new t3lib_beUserAuth();
+		$adminUser = new \TYPO3\CMS\Core\Authentication\BackendUserAuthentication();
 		$adminUser->user['uid'] = $GLOBALS['BE_USER']->user['uid'];
 		$adminUser->user['username'] = '_CLI_lowlevel';
 		$adminUser->user['admin'] = 1;
 		$adminUser->workspace = 0;
 
-		$this->tce = t3lib_div::makeInstance('t3lib_TCEmain');
+		$this->tce = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('t3lib_TCEmain');
 		$this->tce->start(Array(), Array());
 		$this->tce->start(Array(), Array(), $adminUser);
 	}
@@ -56,7 +56,7 @@ class Tx_Coreapi_Service_CacheApiService {
 	 */
 	public function clearAllCaches() {
 		if (version_compare(TYPO3_version, '6.0.0', '<')) {
-			t3lib_extMgm::removeCacheFiles();
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::removeCacheFiles();
 		}
 		$this->tce->clear_cacheCmd('all');
 	}
@@ -73,7 +73,7 @@ class Tx_Coreapi_Service_CacheApiService {
 	 */
 	public function clearConfigurationCache() {
 		if (version_compare(TYPO3_version, '6.0.0', '<')) {
-			t3lib_extMgm::removeCacheFiles();
+			\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::removeCacheFiles();
 		}
 		$this->tce->clear_cacheCmd('temp_cached');
 	}
@@ -104,5 +104,3 @@ class Tx_Coreapi_Service_CacheApiService {
 		return $toBeFlushed;
 	}
 }
-
-?>

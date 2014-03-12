@@ -1,6 +1,6 @@
 <?php
 
-$extensionPath = t3lib_extMgm::extPath('coreapi');
+$extensionPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('coreapi');
 $extensionClassesPath = $extensionPath . 'Classes/';
 
 return array(
@@ -11,7 +11,4 @@ return array(
 	'tx_coreapi_service_siteapiservice' => $extensionClassesPath . 'Service/SiteApiService.php',
 	'tx_coreapi_service_databaseapiservice' => $extensionClassesPath . 'Service/DatabaseApiService.php',
 	'tx_coreapi_service_extensionapiservice' => $extensionClassesPath . 'Service/ExtensionApiService.php',
-	'tx_coreapi_cli_dispatcher' => $extensionClassesPath .'Cli/Dispatcher.php',
 );
-
-?>

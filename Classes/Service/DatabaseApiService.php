@@ -49,11 +49,11 @@ class Tx_Coreapi_Service_DatabaseApiService {
 	 */
 	public function __construct() {
 		if (class_exists('TYPO3\\CMS\\Install\\Sql\\SchemaMigrator')) {
-			$this->sqlHandler = t3lib_div::makeInstance('TYPO3\\CMS\\Install\\Sql\\SchemaMigrator');
+			$this->sqlHandler = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Install\\Sql\\SchemaMigrator');
 		} elseif (class_exists('t3lib_install_Sql')) {
-			$this->sqlHandler = t3lib_div::makeInstance('t3lib_install_Sql');
+			$this->sqlHandler = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('t3lib_install_Sql');
 		} elseif (class_exists('t3lib_install')) {
-			$this->sqlHandler = t3lib_div::makeInstance('t3lib_install');
+			$this->sqlHandler = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('t3lib_install');
 		}
 	}
 
@@ -68,14 +68,14 @@ class Tx_Coreapi_Service_DatabaseApiService {
 	public function databaseCompare($actions, $dry = FALSE) {
 		$errors = array();
 
-		$availableActions = array_flip(t3lib_div::makeInstance('Tx_Extbase_Reflection_ClassReflection', 'Tx_Coreapi_Service_DatabaseApiService')->getConstants());
+		$availableActions = array_flip(\TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('Tx_Extbase_Reflection_ClassReflection', 'Tx_Coreapi_Service_DatabaseApiService')->getConstants());
 
 		if (empty($actions)) {
 			throw new InvalidArgumentException('No compare modes defined');
 		}
 
 		$allowedActions = array();
-		$actionSplit = t3lib_div::trimExplode(',', $actions);
+		$actionSplit = \TYPO3\CMS\Documentation\Utility\GeneralUtility::trimExplode(',', $actions);
 		foreach ($actionSplit as $split) {
 			if (!isset($availableActions[$split])) {
 				throw new InvalidArgumentException(sprintf('Action "%s" is not available!', $split));
@@ -83,17 +83,17 @@ class Tx_Coreapi_Service_DatabaseApiService {
 			$allowedActions[$split] = 1;
 		}
 
-		$tblFileContent = t3lib_div::getUrl(PATH_t3lib . 'stddb/tables.sql');
+		$tblFileContent = \TYPO3\CMS\Documentation\Utility\GeneralUtility::getUrl(PATH_t3lib . 'stddb/tables.sql');
 
 		foreach ($GLOBALS['TYPO3_LOADED_EXT'] as $loadedExtConf) {
 			if (is_array($loadedExtConf) && $loadedExtConf['ext_tables.sql']) {
-				$extensionSqlContent = t3lib_div::getUrl($loadedExtConf['ext_tables.sql']);
+				$extensionSqlContent = \TYPO3\CMS\Documentation\Utility\GeneralUtility::getUrl($loadedExtConf['ext_tables.sql']);
 				$tblFileContent .= LF . LF . LF . LF . $extensionSqlContent;
 			}
 		}
 
 		if (is_callable('t3lib_cache::getDatabaseTableDefinitions')) {
-			$tblFileContent .= t3lib_cache::getDatabaseTableDefinitions();
+			$tblFileContent .= \TYPO3\CMS\Core\Cache\Cache::getDatabaseTableDefinitions();
 		}
 
 		if (class_exists('TYPO3\\CMS\\Core\\Category\\CategoryRegistry')) {
@@ -205,10 +205,10 @@ class Tx_Coreapi_Service_DatabaseApiService {
 	 * @return array
 	 */
 	public function databaseCompareAvailableActions() {
-		$availableActions = array_flip(t3lib_div::makeInstance('Tx_Extbase_Reflection_ClassReflection', 'Tx_Coreapi_Service_DatabaseApiService')->getConstants());
+		$availableActions = array_flip(\TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('Tx_Extbase_Reflection_ClassReflection', 'Tx_Coreapi_Service_DatabaseApiService')->getConstants());
 
 		foreach ($availableActions as $number => $action) {
-			if (!t3lib_div::isFirstPartOfStr($action, 'ACTION_')) {
+			if (!\TYPO3\CMS\Documentation\Utility\GeneralUtility::isFirstPartOfStr($action, 'ACTION_')) {
 				unset($availableActions[$number]);
 			}
 		}
@@ -250,5 +250,3 @@ class Tx_Coreapi_Service_DatabaseApiService {
 	}
 
 }
-
-?>

@@ -29,7 +29,7 @@
  * @package TYPO3
  * @subpackage tx_coreapi
  */
-class Tx_Coreapi_Command_ExtensionApiCommandController extends Tx_Extbase_MVC_Controller_CommandController {
+class Tx_Coreapi_Command_ExtensionApiCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\CommandController {
 
 	/**
 	 * Information about an extension
@@ -60,7 +60,7 @@ class Tx_Coreapi_Command_ExtensionApiCommandController extends Tx_Extbase_MVC_Co
 				continue;
 			}
 			// Skip properties which are already handled
-			if ($emConfKey === 'title' || $emConfKey === 'version' || $emConfKey === 'state') {
+			if ($emConfKey === 'title' || $emConfKey === 'version' || $emConfKey === 'state' || $emConfKey === '_md5_values_when_last_written') {
 				continue;
 			}
 			$outputInformation[$emConfKey] = $emConfValue;
@@ -104,8 +104,9 @@ class Tx_Coreapi_Command_ExtensionApiCommandController extends Tx_Extbase_MVC_Co
 			$this->quit();
 		}
 
-		/** @var $extensions Tx_Coreapi_Service_ExtensionApiService */
-		$extensions = $this->objectManager->get('Tx_Coreapi_Service_ExtensionApiService')->getInstalledExtensions($type);
+		/** @var $extensionsService Tx_Coreapi_Service_ExtensionApiService */
+		$extensionsService = $this->objectManager->get('Tx_Coreapi_Service_ExtensionApiService');
+		$extensions = $extensionsService->getInstalledExtensions($type);
 
 		foreach ($extensions as $key => $details) {
 			$title = $key . ' - ' . $details['version'] . '/' . $details['state'];
@@ -129,42 +130,6 @@ class Tx_Coreapi_Command_ExtensionApiCommandController extends Tx_Extbase_MVC_Co
 		$service->updateMirrors();
 
 		$this->outputLine('Extension list has been updated.');
-	}
-
-	/**
-	 * Install(activate) an extension
-	 *
-	 * @param string $key extension key
-	 * @return void
-	 */
-	public function installCommand($key) {
-		try {
-			/** @var $service Tx_Coreapi_Service_ExtensionApiService */
-			$service = $this->objectManager->get('Tx_Coreapi_Service_ExtensionApiService');
-			$data = $service->installExtension($key);
-		} catch (Exception $e) {
-			$this->outputLine($e->getMessage());
-			$this->quit();
-		}
-		$this->outputLine(sprintf('Extension "%s" is now installed!', $key));
-	}
-
-	/**
-	 * UnInstall(deactivate) an extension
-	 *
-	 * @param string $key extension key
-	 * @return void
-	 */
-	public function uninstallCommand($key) {
-		try {
-			/** @var $service Tx_Coreapi_Service_ExtensionApiService */
-			$service = $this->objectManager->get('Tx_Coreapi_Service_ExtensionApiService');
-			$data = $service->uninstallExtension($key);
-		} catch (Exception $e) {
-			$this->outputLine($e->getMessage());
-			$this->quit();
-		}
-		$this->outputLine(sprintf('Extension "%s" is now uninstalled!', $key));
 	}
 
 	/**
@@ -204,7 +169,7 @@ class Tx_Coreapi_Command_ExtensionApiCommandController extends Tx_Extbase_MVC_Co
 					if (strpos($v, '=') === FALSE) {
 						throw new InvalidArgumentException(sprintf('Ill-formed setting "%s"!', $v));
 					}
-					$parts = t3lib_div::trimExplode('=', $v, FALSE, 2);
+					$parts = \TYPO3\CMS\Documentation\Utility\GeneralUtility::trimExplode('=', $v, FALSE, 2);
 					if (!empty($parts[0])) {
 						$conf[$parts[0]] = $parts[1];
 					}
@@ -285,5 +250,3 @@ class Tx_Coreapi_Command_ExtensionApiCommandController extends Tx_Extbase_MVC_Co
 		}
 	}
 }
-
-?>
