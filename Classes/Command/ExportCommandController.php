@@ -115,7 +115,7 @@ class Tx_Coreapi_Command_ExportCommandController extends \TYPO3\CMS\Extbase\Mvc\
 		shell_exec($command);
 		shell_exec('chmod 777 ' . $target);
 
-		$this->outputLine('The dump has been saved to "%s" and got a size of "%s".', array($target, GeneralUtility::formatSize(filesize($path))));
+		$this->outputLine('The dump has been saved to "%s" and got a size of "%s".', array($target, GeneralUtility::formatSize(filesize($target))));
 	}
 
 	/**
