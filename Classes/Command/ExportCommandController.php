@@ -57,45 +57,49 @@ class Tx_Coreapi_Command_ExportCommandController extends \TYPO3\CMS\Extbase\Mvc\
 	/**
 	 * Export files + database
 	 *
+	 * @param string $prefix
 	 * @return void
 	 */
-	public function allCommand() {
+	public function allCommand($prefix = '') {
 		$this->createOutputDirectory();
 
-		$this->exportDB();
-		$this->packageFiles();
+		$this->exportDB($prefix);
+		$this->packageFiles($prefix);
 	}
 
 	/**
 	 * Export database
 	 *
+	 * @param string $prefix
 	 * @return void
 	 */
-	public function dbCommand() {
+	public function dbCommand($prefix = '') {
 		$this->createOutputDirectory();
 
-		$this->exportDB();
+		$this->exportDB($prefix);
 	}
 
 	/**
 	 * Export files
 	 *
+	 * @param string $prefix
 	 * @return void
 	 */
-	public function filesCommand() {
+	public function filesCommand($prefix = '') {
 		$this->createOutputDirectory();
 
-		$this->packageFiles();
+		$this->packageFiles($prefix);
 	}
 
 	/**
 	 * Package files which are used but not part of the git repo
 	 *
+	 * @param string $prefix
 	 * @return void
 	 */
-	protected function packageFiles() {
+	protected function packageFiles($prefix) {
 		$path = PATH_site;
-		$target = $this->getPath() . 'files.tar.gz';
+		$target = $this->getPath($prefix) . 'files.tar.gz';
 
 		$commandParts = array(
 			'cd ' . $path . '&&',
@@ -111,18 +115,19 @@ class Tx_Coreapi_Command_ExportCommandController extends \TYPO3\CMS\Extbase\Mvc\
 		shell_exec($command);
 		shell_exec('chmod 777 ' . $target);
 
-		$this->outputLine('The dump has been saved to "%s" and got a size of "%s".', array($target, GeneralUtility::formatSize(filesize($path))));
+		$this->outputLine('The dump has been saved to "%s" and got a size of "%s".', array($target, GeneralUtility::formatSize(filesize($target))));
 	}
 
 	/**
 	 * Export the complete DB using mysqldump
 	 *
+	 * @param string $prefix
 	 * @return void
 	 */
-	protected function exportDB() {
+	protected function exportDB($prefix) {
 		$dbData = $GLOBALS['TYPO3_CONF_VARS']['DB'];
 
-		$path = GeneralUtility::getFileAbsFileName($this->getPath() . 'db.sql');
+		$path = GeneralUtility::getFileAbsFileName($this->getPath($prefix) . 'db.sql');
 
 		$commandParts = array(
 			'mysqldump --host=' . $dbData['host'],
@@ -189,11 +194,18 @@ class Tx_Coreapi_Command_ExportCommandController extends \TYPO3\CMS\Extbase\Mvc\
 	/**
 	 * Return the path, including timestamp + a random value
 	 *
+	 * @param string $prefix
 	 * @return string
 	 */
-	protected function getPath() {
+	protected function getPath($prefix) {
 		$path = PATH_site . self::PATH;
-		$path .= date('Y-m-d_h-i') . '-' . GeneralUtility::getRandomHexString(16) . '-';
+
+		if (!empty($prefix) && preg_match('/^[a-z0-9_\\-]{2,}$/i', $prefix)) {
+			$path .= $prefix;
+		} else {
+			$path .= date('Y-m-d_h-i') . '-' . GeneralUtility::getRandomHexString(16) . '-';
+		}
+
 		return $path;
 	}
 
