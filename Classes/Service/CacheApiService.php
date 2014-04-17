@@ -46,7 +46,7 @@ class Tx_Coreapi_Service_CacheApiService {
 		$adminUser->user['admin'] = 1;
 		$adminUser->workspace = 0;
 
-		$this->tce = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('t3lib_TCEmain');
+		$this->tce = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('t3lib_TCEmain');
 		$this->tce->start(Array(), Array());
 		$this->tce->start(Array(), Array(), $adminUser);
 	}
