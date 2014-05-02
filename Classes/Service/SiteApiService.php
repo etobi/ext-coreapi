@@ -105,7 +105,7 @@ class Tx_Coreapi_Service_SiteApiService {
 	 */
 	protected function getCountOfExtensions(&$data) {
 		/** @var Tx_Coreapi_Service_ExtensionApiService $extensionService */
-		$extensionService = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('Tx_Coreapi_Service_ExtensionApiService');
+		$extensionService = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Coreapi_Service_ExtensionApiService');
 		$extensions = $extensionService->getInstalledExtensions('L');
 		$data['Count local installed extensions'] = count($extensions);
 	}
