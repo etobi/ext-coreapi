@@ -28,7 +28,7 @@
  * @package TYPO3
  * @subpackage tx_coreapi
  */
-class Tx_Coreapi_Command_DatabaseApiCommandController extends Tx_Extbase_MVC_Controller_CommandController {
+class Tx_Coreapi_Command_DatabaseApiCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\CommandController {
 
 	/**
 	 * Database compare
@@ -36,8 +36,9 @@ class Tx_Coreapi_Command_DatabaseApiCommandController extends Tx_Extbase_MVC_Con
 	 * Leave the argument 'actions' empty or use "help" to see the available ones
 	 *
 	 * @param string $actions List of actions which will be executed
+	 * @param boolean $dry If set, a dry run will be done
 	 */
-	public function databaseCompareCommand($actions = '') {
+	public function databaseCompareCommand($actions = '', $dry = FALSE) {
 		/** @var $service Tx_Coreapi_Service_DatabaseApiService */
 		$service = $this->objectManager->get('Tx_Coreapi_Service_DatabaseApiService');
 
@@ -49,14 +50,24 @@ class Tx_Coreapi_Command_DatabaseApiCommandController extends Tx_Extbase_MVC_Con
 			$this->quit();
 		}
 
-		$result = $service->databaseCompare($actions);
-		if (empty($result)) {
-			$this->outputLine('DB has been compared');
+		$result = $service->databaseCompare($actions, $dry);
+		if ($dry) {
+			$this->outputLine('DB compare would execute the following queries:');
+			foreach($result as $key => $set) {
+				$this->outputLine(sprintf('### Action: %s ###', $key));
+				$this->outputLine('===================================');
+				foreach($set as $line) {
+					$this->outputLine($line);
+				}
+				$this->outputLine(LF);
+			}
 		} else {
-			$this->outputLine('DB could not be compared, Error(s): %s', array(LF . implode(LF, $result)));
-			$this->quit();
+			if (empty($result)) {
+				$this->outputLine('DB has been compared');
+			} else {
+				$this->outputLine('DB could not be compared, Error(s): %s', array(LF . implode(LF, $result)));
+				$this->quit();
+			}
 		}
 	}
 }
-
-?>

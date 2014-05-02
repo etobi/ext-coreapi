@@ -28,7 +28,7 @@
  * @package TYPO3
  * @subpackage tx_coreapi
  */
-class Tx_Coreapi_Command_SiteApiCommandController extends Tx_Extbase_MVC_Controller_CommandController {
+class Tx_Coreapi_Command_SiteApiCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\CommandController {
 
 	/**
 	 * Site info
@@ -63,5 +63,3 @@ class Tx_Coreapi_Command_SiteApiCommandController extends Tx_Extbase_MVC_Control
 		$service->createSysNews($header, $text);
 	}
 }
-
-?>

@@ -49,11 +49,11 @@ class Tx_Coreapi_Service_DatabaseApiService {
 	 */
 	public function __construct() {
 		if (class_exists('TYPO3\\CMS\\Install\\Sql\\SchemaMigrator')) {
-			$this->sqlHandler = t3lib_div::makeInstance('TYPO3\\CMS\\Install\\Sql\\SchemaMigrator');
+			$this->sqlHandler = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Install\\Sql\\SchemaMigrator');
 		} elseif (class_exists('t3lib_install_Sql')) {
-			$this->sqlHandler = t3lib_div::makeInstance('t3lib_install_Sql');
+			$this->sqlHandler = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('t3lib_install_Sql');
 		} elseif (class_exists('t3lib_install')) {
-			$this->sqlHandler = t3lib_div::makeInstance('t3lib_install');
+			$this->sqlHandler = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('t3lib_install');
 		}
 	}
 
@@ -61,20 +61,21 @@ class Tx_Coreapi_Service_DatabaseApiService {
 	 * Database compare
 	 *
 	 * @param string $actions comma separated list of IDs
+	 * @param boolean $dry dry run
 	 * @return array
 	 * @throws InvalidArgumentException
 	 */
-	public function databaseCompare($actions) {
+	public function databaseCompare($actions, $dry = FALSE) {
 		$errors = array();
 
-		$availableActions = array_flip(t3lib_div::makeInstance('Tx_Extbase_Reflection_ClassReflection', 'Tx_Coreapi_Service_DatabaseApiService')->getConstants());
+		$availableActions = array_flip(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Reflection_ClassReflection', 'Tx_Coreapi_Service_DatabaseApiService')->getConstants());
 
 		if (empty($actions)) {
 			throw new InvalidArgumentException('No compare modes defined');
 		}
 
 		$allowedActions = array();
-		$actionSplit = t3lib_div::trimExplode(',', $actions);
+		$actionSplit = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $actions);
 		foreach ($actionSplit as $split) {
 			if (!isset($availableActions[$split])) {
 				throw new InvalidArgumentException(sprintf('Action "%s" is not available!', $split));
@@ -82,18 +83,17 @@ class Tx_Coreapi_Service_DatabaseApiService {
 			$allowedActions[$split] = 1;
 		}
 
-
-		$tblFileContent = t3lib_div::getUrl(PATH_t3lib . 'stddb/tables.sql');
+		$tblFileContent = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl(PATH_t3lib . 'stddb/tables.sql');
 
 		foreach ($GLOBALS['TYPO3_LOADED_EXT'] as $loadedExtConf) {
 			if (is_array($loadedExtConf) && $loadedExtConf['ext_tables.sql']) {
-				$extensionSqlContent = t3lib_div::getUrl($loadedExtConf['ext_tables.sql']);
+				$extensionSqlContent = \TYPO3\CMS\Core\Utility\GeneralUtility::getUrl($loadedExtConf['ext_tables.sql']);
 				$tblFileContent .= LF . LF . LF . LF . $extensionSqlContent;
 			}
 		}
 
 		if (is_callable('t3lib_cache::getDatabaseTableDefinitions')) {
-			$tblFileContent .= t3lib_cache::getDatabaseTableDefinitions();
+			$tblFileContent .= \TYPO3\CMS\Core\Cache\Cache::getDatabaseTableDefinitions();
 		}
 
 		if (class_exists('TYPO3\\CMS\\Core\\Category\\CategoryRegistry')) {
@@ -116,41 +116,81 @@ class Tx_Coreapi_Service_DatabaseApiService {
 			$results = array();
 
 			if ($allowedActions[self::ACTION_UPDATE_CLEAR_TABLE] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($update_statements['clear_table'], $allowedRequestKeys);
+				if ($dry) {
+					$results['clear_table'] = $update_statements['clear_table'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($update_statements['clear_table'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_UPDATE_ADD] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($update_statements['add'], $allowedRequestKeys);
+				if ($dry) {
+					$results['add'] = $update_statements['add'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($update_statements['add'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_UPDATE_CHANGE] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($update_statements['change'], $allowedRequestKeys);
+				if ($dry) {
+					$results['update_change'] = $update_statements['change'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($update_statements['change'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_REMOVE_CHANGE] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['change'], $allowedRequestKeys);
+				if ($dry) {
+					$results['remove_change'] = $remove_statements['change'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['change'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_REMOVE_DROP] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['drop'], $allowedRequestKeys);
+				if ($dry) {
+					$results['drop'] = $remove_statements['drop'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['drop'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_UPDATE_CREATE_TABLE] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($update_statements['create_table'], $allowedRequestKeys);
+				if ($dry) {
+					$results['create_table'] = $update_statements['create_table'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($update_statements['create_table'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_REMOVE_CHANGE_TABLE] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['change_table'], $allowedRequestKeys);
+				if ($dry) {
+					$results['change_table'] = $remove_statements['change_table'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['change_table'], $allowedRequestKeys);
+				}
 			}
 
 			if ($allowedActions[self::ACTION_REMOVE_DROP_TABLE] == 1) {
-				$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['drop_table'], $allowedRequestKeys);
+				if ($dry) {
+					$results['drop_table'] = $remove_statements['drop_table'];
+				} else {
+					$results[] = $this->sqlHandler->performUpdateQueries($remove_statements['drop_table'], $allowedRequestKeys);
+				}
 			}
 
-			foreach ($results as $resultSet) {
-				if (is_array($resultSet)) {
-					foreach ($resultSet as $key => $errorMessage) {
-						$errors[$key] = $errorMessage;
+			if ($dry) {
+				foreach ($results as $key => $resultSet) {
+					if (!empty($resultSet)) {
+						$errors[$key] = $resultSet;
+					}
+				}
+			} else {
+				foreach ($results as $resultSet) {
+					if (is_array($resultSet)) {
+						foreach ($resultSet as $key => $line) {
+							$errors[$key] = $line;
+						}
 					}
 				}
 			}
@@ -161,13 +201,14 @@ class Tx_Coreapi_Service_DatabaseApiService {
 
 	/**
 	 * Get all available actions
+	 *
 	 * @return array
 	 */
 	public function databaseCompareAvailableActions() {
-		$availableActions = array_flip(t3lib_div::makeInstance('Tx_Extbase_Reflection_ClassReflection', 'Tx_Coreapi_Service_DatabaseApiService')->getConstants());
+		$availableActions = array_flip(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Reflection_ClassReflection', 'Tx_Coreapi_Service_DatabaseApiService')->getConstants());
 
 		foreach ($availableActions as $number => $action) {
-			if (!t3lib_div::isFirstPartOfStr($action, 'ACTION_')) {
+			if (!\TYPO3\CMS\Core\Utility\GeneralUtility::isFirstPartOfStr($action, 'ACTION_')) {
 				unset($availableActions[$number]);
 			}
 		}
@@ -209,5 +250,3 @@ class Tx_Coreapi_Service_DatabaseApiService {
 	}
 
 }
-
-?>

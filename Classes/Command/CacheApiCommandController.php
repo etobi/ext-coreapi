@@ -28,7 +28,7 @@
  * @package TYPO3
  * @subpackage tx_coreapi
  */
-class Tx_Coreapi_Command_CacheApiCommandController extends Tx_Extbase_MVC_Controller_CommandController {
+class Tx_Coreapi_Command_CacheApiCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\CommandController {
 
 	/**
 	 * Clear all caches
@@ -83,5 +83,3 @@ class Tx_Coreapi_Command_CacheApiCommandController extends Tx_Extbase_MVC_Contro
 		$this->outputLine('Cleared caches: ' . implode(', ', $clearedCaches));
 	}
 }
-
-?>

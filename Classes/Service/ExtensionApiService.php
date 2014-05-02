@@ -60,10 +60,10 @@ class Tx_Coreapi_Service_ExtensionApiService {
 			throw new InvalidArgumentException(sprintf('Extension "%s" not found!', $extensionKey));
 		}
 
-		include_once(t3lib_extMgm::extPath($extensionKey) . 'ext_emconf.php');
+		include_once(\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($extensionKey) . 'ext_emconf.php');
 		$information = array(
 			'em_conf' => $EM_CONF[''],
-			'is_installed' => t3lib_extMgm::isLoaded($extensionKey)
+			'is_installed' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($extensionKey)
 		);
 
 		return $information;
@@ -90,7 +90,7 @@ class Tx_Coreapi_Service_ExtensionApiService {
 				continue;
 			}
 
-			include_once(t3lib_extMgm::extPath($key) . 'ext_emconf.php');
+			include_once(\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($key) . 'ext_emconf.php');
 			$list[$key] = $EM_CONF[''];
 		}
 
@@ -106,7 +106,7 @@ class Tx_Coreapi_Service_ExtensionApiService {
 	 * @throws RuntimeException
 	 */
 	public function updateMirrors() {
-		if (t3lib_div::compat_version('6.0.0')) {
+		if (\TYPO3\CMS\Documentation\Utility\GeneralUtility::compat_version('6.0.0')) {
 			throw new RuntimeException('This feature is not available in TYPO3 versions > 4.7 (yet)!');
 		}
 
@@ -116,13 +116,14 @@ class Tx_Coreapi_Service_ExtensionApiService {
 			return;
 		}
 
-			// update all repositories
+		// update all repositories
 		foreach ($repositories as $repository) {
 			/* @var $objRepository tx_em_Repository */
-			$objRepository = t3lib_div::makeInstance('tx_em_Repository', $repository['uid']);
+			$objRepository = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('tx_em_Repository', $repository['uid']);
 			/* @var $objRepositoryUtility tx_em_Repository_Utility */
-			$objRepositoryUtility = t3lib_div::makeInstance('tx_em_Repository_Utility', $objRepository);
-			$count = $objRepositoryUtility->updateExtList(FALSE);
+			$objRepositoryUtility = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('tx_em_Repository_Utility', $objRepository);
+
+			$objRepositoryUtility->updateExtList(FALSE);
 			unset($objRepository, $objRepositoryUtility);
 		}
 	}
@@ -150,7 +151,7 @@ class Tx_Coreapi_Service_ExtensionApiService {
 		foreach ($extensions as $extKey => $extInfo) {
 			$uploadFolder = PATH_site . tx_em_Tools::uploadFolder($extKey);
 			if ($extInfo['uploadfolder'] && !@is_dir($uploadFolder)) {
-				t3lib_div::mkdir($uploadFolder);
+				\TYPO3\CMS\Documentation\Utility\GeneralUtility::mkdir($uploadFolder);
 				$messages[] = 'mkdir ' . $uploadFolder;
 				$indexContent = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 					<HTML>
@@ -159,119 +160,12 @@ class Tx_Coreapi_Service_ExtensionApiService {
 					<META http-equiv=Refresh Content="0; Url=../../">
 					</HEAD>
 					</HTML>';
-				t3lib_div::writeFile($uploadFolder . 'index.html', $indexContent);
+				\TYPO3\CMS\Documentation\Utility\GeneralUtility::writeFile($uploadFolder . 'index.html', $indexContent);
 			}
 		}
 		return $messages;
 	}
 
-
-	/**
-	 * Install (load) an extension
-	 *
-	 * @param string $extensionKey extension key
-	 * @return void
-	 * @throws RuntimeException
-	 * @throws InvalidArgumentException
-	 */
-	public function installExtension($extensionKey) {
-		if (t3lib_div::compat_version('6.0.0')) {
-			throw new RuntimeException('This feature is not available in TYPO3 versions > 4.7 (yet)!');
-		}
-
-		// checks if extension exists
-		if (!$this->extensionExists($extensionKey)) {
-			throw new InvalidArgumentException(sprintf('Extension "%s" does not exist!', $extensionKey));
-		}
-
-		// check if extension is already loaded
-		if (t3lib_extMgm::isLoaded($extensionKey)) {
-			throw new InvalidArgumentException(sprintf('Extension "%s" already installed!', $extensionKey));
-		}
-
-		// check if localconf.php is writable
-		if (!t3lib_extMgm::isLocalconfWritable()) {
-			throw new RuntimeException('Localconf.php is not writeable!');
-		}
-
-		$this->initializeExtensionManagerObjects();
-		list($currentList,) = $this->extensionList->getInstalledExtensions();
-
-		// add extension to list of loaded extensions
-		$newList = $this->extensionList->addExtToList($extensionKey, $currentList);
-		if ($newList === -1) {
-			throw new RuntimeException(sprintf('Extension "%s" could not be installed!', $extensionKey));
-		}
-
-		// update typo3conf/localconf.php
-		$install = $this->getEmInstall();
-		$install->writeNewExtensionList($newList);
-
-		tx_em_Tools::refreshGlobalExtList();
-
-		// make database changes
-		// TODO make this optional
-		$install->forceDBupdates($extensionKey, $newList[$extensionKey]);
-
-		// TODO make this optional
-		$this->clearCaches();
-	}
-
-	/**
-	 * Uninstall (unload) an extension
-	 *
-	 * @param string $extensionKey extension key
-	 * @return void
-	 * @throws RuntimeException
-	 * @throws InvalidArgumentException
-	 */
-	public function uninstallExtension($extensionKey) {
-		if (t3lib_div::compat_version('6.0.0')) {
-			throw new RuntimeException('This feature is not available in TYPO3 versions > 4.7 (yet)!');
-		}
-
-		// check if extension is this extension (coreapi)
-		if ($extensionKey == 'coreapi') {
-			throw new InvalidArgumentException(sprintf('Extension "%s" cannot be uninstalled!', $extensionKey));
-		}
-
-		// checks if extension exists
-		if (!$this->extensionExists($extensionKey)) {
-			throw new InvalidArgumentException(sprintf('Extension "%s" does not exist!', $extensionKey));
-		}
-
-		// check if extension is loaded
-		if (!t3lib_extMgm::isLoaded($extensionKey)) {
-			throw new InvalidArgumentException(sprintf('Extension "%s" is not installed!', $extensionKey));
-		}
-
-		// check if this is a required extension (such as "cms") that cannot be uninstalled
-		$requiredExtList = t3lib_div::trimExplode(',', t3lib_extMgm::getRequiredExtensionList());
-		if (in_array($extensionKey, $requiredExtList)) {
-			throw new InvalidArgumentException(sprintf('Extension "%s" is a required extension and cannot be uninstalled!', $extensionKey));
-		}
-
-		// check if localconf.php is writable
-		if (!t3lib_extMgm::isLocalconfWritable()) {
-			throw new RuntimeException('Localconf.php is not writeable!');
-		}
-
-		$this->initializeExtensionManagerObjects();
-		list($currentList,) = $this->extensionList->getInstalledExtensions();
-		$newList = $this->extensionList->removeExtFromList($extensionKey, $currentList);
-		if ($newList === -1) {
-			throw new RuntimeException(sprintf('Extension "%s" could not be installed!', $extensionKey));
-		}
-
-		// update typo3conf/localconf.php
-		$install = $this->getEmInstall();
-		$install->writeNewExtensionList($newList);
-
-		tx_em_Tools::refreshGlobalExtList();
-
-		// TODO make this optional
-		$this->clearCaches();
-	}
 
 	/**
 	 * Configure an extension
@@ -285,7 +179,7 @@ class Tx_Coreapi_Service_ExtensionApiService {
 	public function configureExtension($extensionKey, $extensionConfiguration = array()) {
 		global $TYPO3_CONF_VARS;
 
-		if (t3lib_div::compat_version('6.0.0')) {
+		if (\TYPO3\CMS\Documentation\Utility\GeneralUtility::compat_version('6.0.0')) {
 			throw new RuntimeException('This feature is not available in TYPO3 versions > 4.7 (yet)!');
 		}
 
@@ -295,12 +189,12 @@ class Tx_Coreapi_Service_ExtensionApiService {
 		}
 
 		// check if extension is loaded
-		if (!t3lib_extMgm::isLoaded($extensionKey)) {
+		if (!\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded($extensionKey)) {
 			throw new InvalidArgumentException(sprintf('Extension "%s" is not installed!', $extensionKey));
 		}
 
 		// check if extension can be configured
-		$extAbsPath = t3lib_extMgm::extPath($extensionKey);
+		$extAbsPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($extensionKey);
 
 		$extConfTemplateFile = $extAbsPath . 'ext_conf_template.txt';
 		if (!file_exists($extConfTemplateFile)) {
@@ -313,12 +207,12 @@ class Tx_Coreapi_Service_ExtensionApiService {
 		}
 
 		// Load tsStyleConfig class and parse configuration template:
-		$extRelPath = t3lib_extmgm::extRelPath($extensionKey);
+		$extRelPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath($extensionKey);
 
-		$tsStyleConfig = t3lib_div::makeInstance('t3lib_tsStyleConfig');
+		$tsStyleConfig = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('t3lib_tsStyleConfig');
 		$tsStyleConfig->doNotSortCategoriesBeforeMakingForm = TRUE;
 		$constants = $tsStyleConfig->ext_initTSstyleConfig(
-			t3lib_div::getUrl($extConfTemplateFile),
+			\TYPO3\CMS\Documentation\Utility\GeneralUtility::getUrl($extConfTemplateFile),
 			$extRelPath,
 			$extAbsPath,
 			$GLOBALS['BACK_PATH']
@@ -378,7 +272,7 @@ class Tx_Coreapi_Service_ExtensionApiService {
 	 * @throws InvalidArgumentException
 	 */
 	public function fetchExtension($extensionKey, $version = '', $location = 'L', $overwrite = FALSE, $mirror = '') {
-		if (t3lib_div::compat_version('6.0.0')) {
+		if (\TYPO3\CMS\Documentation\Utility\GeneralUtility::compat_version('6.0.0')) {
 			throw new RuntimeException('This feature is not available in TYPO3 versions > 4.7 (yet)!');
 		}
 
@@ -426,16 +320,16 @@ class Tx_Coreapi_Service_ExtensionApiService {
 
 		// get mirrors
 		$mirrors = array();
-		$mirrorsTmpFile = t3lib_div::tempnam('mirrors');
-		$mirrorsFile = t3lib_div::getUrl($GLOBALS['TYPO3_CONF_VARS']['EXT']['em_mirrorListURL'], 0);
+		$mirrorsTmpFile = \TYPO3\CMS\Documentation\Utility\GeneralUtility::tempnam('mirrors');
+		$mirrorsFile = \TYPO3\CMS\Documentation\Utility\GeneralUtility::getUrl($GLOBALS['TYPO3_CONF_VARS']['EXT']['em_mirrorListURL'], 0);
 
 		if ($mirrorsFile === FALSE) {
-			t3lib_div::unlink_tempfile($mirrorsTmpFile);
+			\TYPO3\CMS\Documentation\Utility\GeneralUtility::unlink_tempfile($mirrorsTmpFile);
 			throw new RuntimeException('Could not retrieve the list of mirrors!');
 		} else {
-			t3lib_div::writeFile($mirrorsTmpFile, $mirrorsFile);
+			\TYPO3\CMS\Documentation\Utility\GeneralUtility::writeFile($mirrorsTmpFile, $mirrorsFile);
 			$mirrorsXml = implode('', gzfile($mirrorsTmpFile));
-			t3lib_div::unlink_tempfile($mirrorsTmpFile);
+			\TYPO3\CMS\Documentation\Utility\GeneralUtility::unlink_tempfile($mirrorsTmpFile);
 			$mirrors = $this->xmlHandler->parseMirrorsXML($mirrorsXml);
 		}
 
@@ -468,7 +362,7 @@ class Tx_Coreapi_Service_ExtensionApiService {
 
 		// TODO make this optional
 		$install = $this->getEmInstall();
-		$content = $install->installExtension($fetchData, $location, null, '', !$overwrite);
+		$content = $install->installExtension($fetchData, $location, NULL, '', !$overwrite);
 
 		return $return;
 	}
@@ -479,7 +373,7 @@ class Tx_Coreapi_Service_ExtensionApiService {
 	 * @param string $file path to t3x file
 	 * @param string $location where to import the extension. S = typo3/sysext, G = typo3/ext, L = typo3conf/ext
 	 * @param bool $overwrite overwrite the extension if it already exists
-	 * @return void
+	 * @return array
 	 * @throws InvalidArgumentException
 	 */
 	public function importExtension($file, $location = 'L', $overwrite = FALSE) {
@@ -501,7 +395,7 @@ class Tx_Coreapi_Service_ExtensionApiService {
 			throw new InvalidArgumentException(sprintf('Unknown location "%s"!', $location));
 		}
 
-		$fileContent = t3lib_div::getUrl($file);
+		$fileContent = \TYPO3\CMS\Documentation\Utility\GeneralUtility::getUrl($file);
 		if (!$fileContent) {
 			throw new InvalidArgumentException(sprintf('File "%s" is empty!', $file));
 		}
@@ -528,7 +422,7 @@ class Tx_Coreapi_Service_ExtensionApiService {
 		}
 
 		$install = $this->getEmInstall();
-		$content = $install->installExtension($fetchData, $location, null, $file, !$overwrite);
+		$content = $install->installExtension($fetchData, $location, NULL, $file, !$overwrite);
 
 		return $return;
 	}
@@ -538,7 +432,7 @@ class Tx_Coreapi_Service_ExtensionApiService {
 	 * Check if an extension exists
 	 *
 	 * @param string $extensionKey extension key
-	 * @return void
+	 * @return bool
 	 */
 	protected function extensionExists($extensionKey) {
 		$this->initializeExtensionManagerObjects();
@@ -557,17 +451,17 @@ class Tx_Coreapi_Service_ExtensionApiService {
 	 * initialize ExtensionManager Objects
 	 */
 	protected function initializeExtensionManagerObjects() {
-		$this->xmlHandler = t3lib_div::makeInstance('tx_em_Tools_XmlHandler');
-		$this->extensionList = t3lib_div::makeInstance('tx_em_Extensions_List', $this);
-		$this->terConnection = t3lib_div::makeInstance('tx_em_Connection_Ter', $this);
-		$this->extensionDetails = t3lib_div::makeInstance('tx_em_Extensions_Details', $this);
+		$this->xmlHandler = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('tx_em_Tools_XmlHandler');
+		$this->extensionList = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('tx_em_Extensions_List', $this);
+		$this->terConnection = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('tx_em_Connection_Ter', $this);
+		$this->extensionDetails = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('tx_em_Extensions_Details', $this);
 	}
 
 	/**
 	 * @return tx_em_Install
 	 */
 	protected function getEmInstall() {
-		$install = t3lib_div::makeInstance('tx_em_Install', $this);
+		$install = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('tx_em_Install', $this);
 		$install->setSilentMode(TRUE);
 		return $install;
 	}
@@ -576,10 +470,8 @@ class Tx_Coreapi_Service_ExtensionApiService {
 	 * Clear the caches
 	 */
 	protected function clearCaches() {
-		$cacheApiService = t3lib_div::makeInstance('Tx_Coreapi_Service_CacheApiService');
+		$cacheApiService = \TYPO3\CMS\Documentation\Utility\GeneralUtility::makeInstance('Tx_Coreapi_Service_CacheApiService');
 		$cacheApiService->initializeObject();
 		$cacheApiService->clearAllCaches();
 	}
 }
-
-?>
