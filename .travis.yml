@@ -6,7 +6,7 @@ php:
   - 5.6
 
 env:
-  - DB=mysql TYPO3=coreapi/develop INTEGRATION=master COVERAGE=0
+  - DB=mysql TYPO3=master INTEGRATION=master COVERAGE=0
 
 services:
   - memcached
@@ -15,9 +15,6 @@ services:
 notifications:
   email:
     - blueduck@gmx.net
-  slack:
-    rooms:
-      - typo3:DHkQdCNWc6x2znPAYA5T2LXO#gsoc-coreapi
 
 before_script:
   # Get latest git version cause of travis issues (https://github.com/travis-ci/travis-ci/issues/1710)

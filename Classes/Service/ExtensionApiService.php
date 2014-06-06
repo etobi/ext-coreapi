@@ -26,19 +26,9 @@ namespace Etobi\CoreAPI\Service;
  ***************************************************************/
 use InvalidArgumentException;
 use RuntimeException;
-use SebastianBergmann\Exporter\Exception;
-use TYPO3\CMS\Core\Configuration\ConfigurationManager;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManagerInterface;
 use TYPO3\CMS\Extensionmanager\Domain\Model\Extension;
-use TYPO3\CMS\Extensionmanager\Domain\Repository\ExtensionRepository;
-use TYPO3\CMS\Extensionmanager\Domain\Repository\RepositoryRepository;
-use TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService;
-use TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility;
-use TYPO3\CMS\Extensionmanager\Utility\InstallUtility;
-use TYPO3\CMS\Extensionmanager\Utility\ListUtility;
-use TYPO3\CMS\Extensionmanager\Utility\Repository\Helper;
 
 /**
  * Extension API service
@@ -49,24 +39,27 @@ use TYPO3\CMS\Extensionmanager\Utility\Repository\Helper;
  */
 class ExtensionApiService {
 
-	/**
-	 * @var \TYPO3\CMS\Extensionmanager\Utility\Connection\TerUtility $terConnection
+	/*
+	 * some ExtensionManager Objects require public access to these objects
 	 */
+	/** @var tx_em_Tools_XmlHandler */
+	public $xmlHandler;
+
+	/** @var tx_em_Connection_Ter */
 	public $terConnection;
 
+	/** @var tx_em_Extensions_Details */
+	public $extensionDetails;
+
 	/**
-	 * @var \TYPO3\CMS\Core\Configuration\ConfigurationManager $configurationManager
+	 * @var $configurationManager \TYPO3\CMS\Core\Configuration\ConfigurationManager
 	 */
 	protected $configurationManager;
 
-	/**
-	 * @var \TYPO3\CMS\Extensionmanager\Utility\ListUtility $extensionList
-	 */
+	/** @var $extensionList \TYPO3\CMS\Extensionmanager\Utility\ListUtility */
 	public $listUtility;
 
-	/**
-	 * @var \TYPO3\CMS\Extensionmanager\Utility\InstallUtility $installUtility
-	 */
+	/** @var $installUtility \TYPO3\CMS\Extensionmanager\Utility\InstallUtility */
 	protected $installUtility;
 
 	/**
@@ -75,101 +68,68 @@ class ExtensionApiService {
 	protected $repositoryRepository;
 
 	/**
-	 * @var Helper $repositoryHelper
+	 * @var \TYPO3\CMS\Extensionmanager\Utility\Repository\Helper $repositoryHelper
 	 */
 	protected $repositoryHelper;
 
 	/**
-	 * @var ExtensionRepository $extensionRepository
+	 * @var \TYPO3\CMS\Extensionmanager\Domain\Repository\ExtensionRepository $extensionRepository
 	 */
 	protected $extensionRepository;
 
 	/**
-	 * @var ExtensionManagementService $extensionManagementService
+	 * @var \TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService $extensionManagementService
 	 */
 	protected $extensionManagementService;
 
 	/**
-	 * @var ObjectManagerInterface $objectManager
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
 	 */
 	protected $objectManager;
 
 	/**
 	 * @var \TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility $fileHandlingUtility
+	 * @inject
 	 */
 	protected $fileHandlingUtility;
 
 	/**
-	 * @var \TYPO3\CMS\Extensionmanager\Utility\EmConfUtility $emConfUtility
+	 * @param \TYPO3\CMS\Extensionmanager\Domain\Repository\RepositoryRepository $repositoryRepository
 	 */
-	protected $emConfUtility;
-
-	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility $fileHandlingUtility
-	 *
-	 * @return void
-	 */
-	public function injectFileHandlingUtility(FileHandlingUtility $fileHandlingUtility) {
-		$this->fileHandlingUtility = $fileHandlingUtility;
-	}
-
-	/**
-	 * @param \TYPO3\CMS\Extensionmanager\Utility\InstallUtility $installUtility
-	 *
-	 * @return void
-	 */
-	public function injectInstallUtility(InstallUtility $installUtility) {
-		$this->installUtility = $installUtility;
-	}
-
-	/**
-	 * @param RepositoryRepository $repositoryRepository
-	 *
-	 * @return void
-	 */
-	public function injectRepositoryRepository(RepositoryRepository $repositoryRepository) {
+	public function injectRepositoryRepository(\TYPO3\CMS\Extensionmanager\Domain\Repository\RepositoryRepository $repositoryRepository) {
 		$this->repositoryRepository = $repositoryRepository;
 	}
 
 	/**
-	 * @param Helper $repositoryHelper
-	 *
-	 * @return void
+	 * @param \TYPO3\CMS\Extensionmanager\Utility\Repository\Helper $repositoryHelper
 	 */
-	public function injectRepositoryHelper(Helper $repositoryHelper) {
+	public function injectRepositoryHelper(\TYPO3\CMS\Extensionmanager\Utility\Repository\Helper $repositoryHelper) {
 		$this->repositoryHelper = $repositoryHelper;
+
 	}
 
 	/**
-	 * @param ExtensionRepository $extensionRepository
-	 *
-	 * @return void
+	 * @param \TYPO3\CMS\Extensionmanager\Domain\Repository\ExtensionRepository $extensionRepository
 	 */
-	public function injectExtensionRepository(ExtensionRepository $extensionRepository){
+	public function injectExtensionRepository(\TYPO3\CMS\Extensionmanager\Domain\Repository\ExtensionRepository $extensionRepository){
 		$this->extensionRepository = $extensionRepository;
 	}
 
 	/**
-	 * @param ExtensionManagementService $extensionManagementService
-	 *
-	 * @return void
+	 * @param \TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService $extensionManagementService
 	 */
-	public function injectExtensionManagementService(ExtensionManagementService $extensionManagementService) {
+	public function injectExtensionManagementService(\TYPO3\CMS\Extensionmanager\Service\ExtensionManagementService $extensionManagementService) {
 		$this->extensionManagementService = $extensionManagementService;
+
 	}
 
 	/**
-	 * @param ObjectManagerInterface $objectManager
-	 *
-	 * @return void
+	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
 	 */
-	public function injectObjectManager(ObjectManagerInterface $objectManager) {
+	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager) {
 		$this->objectManager = $objectManager;
 	}
 
-	/**
-	 * The constructor
-	 */
 	public function __construct() {
 		$this->configurationManager = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
 	}
@@ -183,17 +143,19 @@ class ExtensionApiService {
 	 * @return array
 	 */
 	public function getExtensionInformation($extensionKey) {
+		global $EM_CONF;
+
 		if (strlen($extensionKey) === 0) {
 			throw new InvalidArgumentException('No extension key given!');
 		}
+		if (!$GLOBALS['TYPO3_LOADED_EXT'][$extensionKey]) {
+			throw new InvalidArgumentException(sprintf('Extension "%s" not found!', $extensionKey));
+		}
 
-		$this->checkExtensionExists($extensionKey);
-
-		$extensions = $this->listExtensions();
-
+		include_once(ExtensionManagementUtility::extPath($extensionKey) . 'ext_emconf.php');
 		$information = array(
-			'em_conf' => $extensions[$extensionKey],
-			'is_installed' => $this->installUtility->isLoaded($extensionKey)
+			'em_conf' => $EM_CONF[''],
+			'is_installed' => ExtensionManagementUtility::isLoaded($extensionKey)
 		);
 
 		return $information;
@@ -207,34 +169,27 @@ class ExtensionApiService {
 	 * @throws InvalidArgumentException
 	 * @return array
 	 */
-	public function listExtensions($type = '') {
+	public function getInstalledExtensions($type = '') {
+		global $EM_CONF;
+
 		$type = ucfirst(strtolower($type));
 		if (!empty($type) && $type !== 'Local' && $type !== 'Global' && $type !== 'System') {
 			throw new InvalidArgumentException('Only "Local", "System", "Global" and "" (all) are supported as type');
 		}
 
-		$this->initializeExtensionManagerObjects();
-
-		// TODO: Make listUtlity local var
-		$extensions = $this->listUtility->getAvailableExtensions();
+		$extensions = $GLOBALS['TYPO3_LOADED_EXT'];
 
 		$list = array();
-
 		foreach ($extensions as $key => $extension) {
-			if ((!empty($type) && $type !== $extension['type'])
-					|| (!$this->installUtility->isLoaded($extension['key']))
-			) {
+			if (!empty($type) && $type{0} !== $extension['type']) {
 				continue;
 			}
 
-			// TODO: Make emConfUtility local var
-			$configuration = $this->emConfUtility->includeEmConf($extension);
-			if (!empty($configuration)) {
-				$list[$key] = $configuration;
-			}
+			include_once(ExtensionManagementUtility::extPath($key) . 'ext_emconf.php');
+			$list[$key] = $EM_CONF[''];
 		}
-		ksort($list);
 
+		ksort($list);
 		return $list;
 	}
 
@@ -261,24 +216,19 @@ class ExtensionApiService {
 	/**
 	 * Creates the upload folders of an extension.
 	 *
-	 * @param string $extensionKey The extension key
-	 *
-	 * @throws \InvalidArgumentException
 	 * @return array
 	 */
-	public function createUploadFolders($extensionKey) {
-		$this->checkExtensionExists($extensionKey);
-
-		$extensions = $this->listExtensions();
-		$extension = $extensions[$extensionKey];
-		$extension['key'] = $extensionKey;
-		$folders = $this->fileHandlingUtility->getAbsolutePathsToConfiguredDirectories($extension);
+	public function createUploadFolders() {
+		$extensions = $this->getInstalledExtensions();
 
 		$result = array();
-		if (is_array($folders) && sizeof($folders) > 0) {
-			$result = $this->fileHandlingUtility->ensureConfiguredDirectoriesExist($extension);
-		} else {
-			$result[] = sprintf('No upload folders configured for "%s".', $extensionKey);
+		if (class_exists('\TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility')) {
+			$fileHandlingUtility = GeneralUtility::makeInstance('TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility');
+			foreach ($extensions AS $key => $extension) {
+				$extension['key'] = $key;
+				$fileHandlingUtility->ensureConfiguredDirectoriesExist($extension);
+			}
+			$result[] = 'done with \TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility->ensureConfiguredDirectoriesExist';
 		}
 
 		return $result;
@@ -295,7 +245,12 @@ class ExtensionApiService {
 	 * @return void
 	 */
 	public function installExtension($extensionKey) {
-		$this->checkExtensionExists($extensionKey);
+//		throw new RuntimeException('This feature is blocked by http://forge.typo3.org/issues/58288');
+
+		// checks if extension exists
+		if (!$this->extensionExists($extensionKey)) {
+			throw new InvalidArgumentException(sprintf('Extension "%s" does not exist!', $extensionKey));
+		}
 
 		$this->installUtility->install($extensionKey);
 	}
@@ -311,71 +266,99 @@ class ExtensionApiService {
 	 */
 	public function uninstallExtension($extensionKey) {
 		if ($extensionKey === 'coreapi') {
-			throw new InvalidArgumentException('Extension "coreapi" cannot be uninstalled!');
+			throw new InvalidArgumentException(sprintf('Extension "%s" cannot be uninstalled!', $extensionKey));
 		}
 
-		$this->checkExtensionExists($extensionKey);
-		$this->checkExtensionLoaded($extensionKey);
+		// checks if extension exists
+		if (!$this->extensionExists($extensionKey)) {
+			throw new InvalidArgumentException(sprintf('Extension "%s" does not exist!', $extensionKey));
+		}
+
+		// check if extension is loaded
+		if (!ExtensionManagementUtility::isLoaded($extensionKey)) {
+			throw new InvalidArgumentException(sprintf('Extension "%s" is not installed!', $extensionKey));
+		}
 
 		$this->installUtility->uninstall($extensionKey);
 	}
 
-
 	/**
 	 * Configure an extension.
 	 *
-	 * @param string $extensionKey              The extension key
-	 * @param array  $newExtensionConfiguration
+	 * @param string $extensionKey           The extension key
+	 * @param array  $extensionConfiguration
 	 *
 	 * @throws RuntimeException
 	 * @throws InvalidArgumentException
 	 * @return void
 	 */
-	public function configureExtension($extensionKey, $newExtensionConfiguration = array()) {
-		$this->checkExtensionExists($extensionKey);
-		$this->checkExtensionLoaded($extensionKey);
+	public function configureExtension($extensionKey, $extensionConfiguration = array()) {
+		/** @var $configurationUtility \TYPO3\CMS\Extensionmanager\Utility\ConfigurationUtility */
+		$configurationUtility = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\ConfigurationUtility');
 
-		// checks if conf array is empty
-		if (empty($newExtensionConfiguration)) {
-			throw new InvalidArgumentException(sprintf('No configuration provided for extension "%s"!', $extensionKey));
+		// check if extension exists
+		if (!$this->extensionExists($extensionKey)) {
+			throw new InvalidArgumentException(sprintf('Extension "%s" does not exist!', $extensionKey));
+		}
+
+		// check if extension is loaded
+		if (!ExtensionManagementUtility::isLoaded($extensionKey)) {
+			throw new InvalidArgumentException(sprintf('Extension "%s" is not installed!', $extensionKey));
 		}
 
 		// check if extension can be configured
-		$extAbsPath = $this->getExtensionPath($extensionKey);
+		$extAbsPath = ExtensionManagementUtility::extPath($extensionKey);
+
 		$extConfTemplateFile = $extAbsPath . 'ext_conf_template.txt';
 		if (!file_exists($extConfTemplateFile)) {
 			throw new InvalidArgumentException(sprintf('Extension "%s" has no configuration options!', $extensionKey));
 		}
 
-		/** @var $configurationUtility \TYPO3\CMS\Extensionmanager\Utility\ConfigurationUtility */
-		$configurationUtility = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\ConfigurationUtility');
-		// get existing configuration
-		$currentExtensionConfig = $configurationUtility->getCurrentConfiguration($extensionKey);
+		// checks if conf array is empty
+		if (empty($extensionConfiguration)) {
+			throw new InvalidArgumentException(sprintf('No configuration for extension "%s"!', $extensionKey));
+		}
+
+		$constants = $configurationUtility->getDefaultConfigurationFromExtConfTemplateAsValuedArray($extensionKey);
 
 		// check for unknown configuration settings
-		foreach ($newExtensionConfiguration as $key => $_) {
-			if (!isset($currentExtensionConfig[$key])) {
+		foreach ($extensionConfiguration as $key => $value) {
+			if (!isset($constants[$key])) {
 				throw new InvalidArgumentException(sprintf('No configuration setting with name "%s" for extension "%s"!', $key, $extensionKey));
 			}
 		}
 
-		// fill with missing values
-		$newExtensionConfiguration = $this->mergeNewExtensionConfiguratonWithCurrentConfiguration(
-				$newExtensionConfiguration,
-				$currentExtensionConfig
-		);
+		// get existing configuration
+		$configurationArray = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$extensionKey]);
+		$configurationArray = is_array($configurationArray) ? $configurationArray : array();
 
-		// write configuration to typo3conf/LocalConfiguration.php
-		$configurationUtility->writeConfiguration($newExtensionConfiguration, $extensionKey);
+		// fill with missing values
+		foreach (array_keys($constants) as $key) {
+			if (!isset($extensionConfiguration[$key])) {
+				if (isset($configurationArray[$key])) {
+					$extensionConfiguration[$key] = $configurationArray[$key];
+				} else {
+					if (!empty($constants[$key]['value'])) {
+						$extensionConfiguration[$key] = $constants[$key]['value'];
+					} else {
+						$extensionConfiguration[$key] = $constants[$key]['default_value'];
+					}
+				}
+			}
+		}
+
+		// write configuration to typo3conf/localconf.php
+		$configurationUtility->writeConfiguration($extensionConfiguration, $extensionKey);
 	}
 
 	/**
 	 * Fetch an extension from TER.
 	 *
-	 * @param string $extensionKey     The extension key
-	 * @param string $location         Where to import the extension. System = typo3/sysext, Global = typo3/ext, Local = typo3conf/ext
-	 * @param bool   $overwrite        Overwrite the extension if it already exists
-	 * @param int    $mirror           The mirror to fetch the extension from
+	 * @param string     $extensionKey
+	 * @param string     $version
+	 * @param string     $location
+	 * @param bool       $overwrite
+	 * @param int        $mirror
 	 *
 	 * @throws \RuntimeException
 	 * @throws \InvalidArgumentException
@@ -405,6 +388,21 @@ class ExtensionApiService {
 			}
 		}
 
+		$allowedInstallTypes = $extension->returnAllowedInstallTypes();
+		$location = ucfirst(strtolower($location));
+		if (!in_array($location, $allowedInstallTypes)) {
+			if ($location === 'Global') {
+				throw new InvalidArgumentException('Global installation is not allowed!');
+			}
+			if ($location === 'Local') {
+				throw new InvalidArgumentException('Local installation is not allowed!');
+			}
+			if ($location === 'System') {
+				throw new InvalidArgumentException('System installation is not allowed!');
+			}
+			throw new InvalidArgumentException(sprintf('Unknown location "%s"!', $location));
+		}
+
 		$mirrors = $this->repositoryHelper->getMirrors();
 
 		if ($mirrors === NULL) {
@@ -419,23 +417,13 @@ class ExtensionApiService {
 			throw new InvalidArgumentException(sprintf('Mirror "%s" does not exist', $mirror));
 		}
 
-		/**
-		 * @var \TYPO3\CMS\Extensionmanager\Utility\DownloadUtility $downloadUtility
-		 */
-		$downloadUtility = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\DownloadUtility');
-		$downloadUtility->setDownloadPath($location);
+		$data = $this->extensionManagementService->resolveDependenciesAndInstall($extension);
 
-		$this->extensionManagementService->downloadMainExtension($extension);
-
-		$return = array();
-		$extensionDir = $this->fileHandlingUtility->getExtensionDir($extensionKey, $location);
-		if (is_dir($extensionDir)) {
-			$return['main']['extKey'] = $extension->getExtensionKey();
-			$return['main']['version'] = $extension->getVersion();
+		if (array_key_exists($extensionKey, $data['installed'])) {
+			$return['extKey'] = $extension->getExtensionKey();
+			$return['version'] = $extension->getVersion();
 		} else {
-			throw new RuntimeException(
-					sprintf('Extension "%s" version %s could not installed!', $extensionKey, $extension->getVersion())
-			);
+			throw new RuntimeException('Extension "'. $extensionKey .'" version ' . $extension->getVersion() . ' could not installed!');
 		}
 
 		return $return;
@@ -447,7 +435,7 @@ class ExtensionApiService {
 	 * @return array
 	 */
 	public function listMirrors() {
-		/** @var $repositoryHelper Helper */
+		/** @var $repositoryHelper \TYPO3\CMS\Extensionmanager\Utility\Repository\Helper */
 		$repositoryHelper = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\Repository\\Helper');
 		$mirrors = $repositoryHelper->getMirrors();
 
@@ -455,118 +443,31 @@ class ExtensionApiService {
 	}
 
 	/**
-	 * Extracts and returns the file content of the given file
-	 *
-	 * @param string $file The file with file path
-	 *
-	 * @return array
-	 */
-	protected function getFileContentFromUrl($file) {
-		return GeneralUtility::getUrl($file);
-	}
-
-	/**
 	 * Imports extension from file.
 	 *
-	 * @param string $file      Path to t3x file
-	 * @param string $location  Where to import the extension. System = typo3/sysext, Global = typo3/ext, Local = typo3conf/ext
-	 * @param bool   $overwrite Overwrite the extension if it already exists
+	 * @param string $file      path to t3x file
+	 * @param string $location  where to import the extension. System = typo3/sysext, Global = typo3/ext, Local = typo3conf/ext
+	 * @param bool   $overwrite overwrite the extension if it already exists
 	 *
 	 * @throws \RuntimeException
 	 * @throws \InvalidArgumentException
-	 * @return array The extension data
+	 * @return array
 	 */
 	public function importExtension($file, $location = 'Local', $overwrite = FALSE) {
+//		if (version_compare(TYPO3_version, '4.7.0', '>')) {
+//			throw new RuntimeException('This feature is not available in TYPO3 versions > 4.7 (yet)!');
+//		}
+
+		$allowedPaths = Extension::returnAllowedInstallPaths();
+
+		$location = ucfirst(strtolower($location));
+
+		$return = array();
 		if (!is_file($file)) {
 			throw new InvalidArgumentException(sprintf('File "%s" does not exist!', $file));
 		}
 
-		$this->checkInstallLocation($location);
-
-		$uploadExtensionFileController = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Controller\\UploadExtensionFileController');
-
-		$filename = pathinfo($file, PATHINFO_BASENAME);
-		$return = $uploadExtensionFileController->extractExtensionFromFile($file, $filename, $overwrite, FALSE);
-
-		return $return;
-	}
-
-	/**
-	 * Checks if the function exists in the system
-	 *
-	 * @param string $extensionKey The extension key
-	 *
-	 * @return void
-	 * @throws \InvalidArgumentException
-	 */
-	protected function checkExtensionExists($extensionKey) {
-		if (!$this->installUtility->isAvailable($extensionKey)) {
-			throw new InvalidArgumentException(sprintf('Extension "%s" does not exist!', $extensionKey));
-		}
-	}
-
-	/**
-	 * Check if an extension is loaded.
-	 *
-	 * @param string $extensionKey The extension key
-	 *
-	 * @throws \InvalidArgumentException
-	 * @return void
-	 */
-	protected function checkExtensionLoaded($extensionKey) {
-		if (!$this->installUtility->isLoaded($extensionKey)) {
-			throw new InvalidArgumentException(sprintf('Extension "%s" is not installed!', $extensionKey));
-		}
-	}
-
-	/**
-	 * Returns the absolute extension path.
-	 * Wrapper around the static method. This makes the method mockable.
-	 *
-	 * @param string $extensionKey The extension key
-	 *
-	 * @return string
-	 */
-	protected function getExtensionPath($extensionKey) {
-		return ExtensionManagementUtility::extPath($extensionKey);
-	}
-
-	/**
-	 * Add missing values from current configuration to the new configuration
-	 *
-	 * @param array $newExtensionConfiguration The new configuration which was provided as argument
-	 * @param array $currentExtensionConfig    The current configuration of the extension
-	 *
-	 * @return array The merged configuration
-	 */
-	protected function mergeNewExtensionConfiguratonWithCurrentConfiguration($newExtensionConfiguration, $currentExtensionConfig) {
-		foreach (array_keys($currentExtensionConfig) as $key) {
-			if (!isset($newExtensionConfiguration[$key])) {
-				if (!empty($currentExtensionConfig[$key]['value'])) {
-					$newExtensionConfiguration[$key] = $currentExtensionConfig[$key]['value'];
-				} else {
-					$newExtensionConfiguration[$key] = $currentExtensionConfig[$key]['default_value'];
-				}
-			}
-		}
-
-		return $newExtensionConfiguration;
-	}
-
-	/**
-	 * Checks if the extension is able to install at the demanded location
-	 *
-	 * @param string $location            The location
-	 * @param array  $allowedInstallTypes The allowed locations
-	 *
-	 * @return void
-	 * @throws \InvalidArgumentException
-	 */
-	protected function checkInstallLocation($location) {
-		$allowedInstallTypes = Extension::returnAllowedInstallTypes();
-		$location = ucfirst(strtolower($location));
-
-		if (!in_array($location, $allowedInstallTypes)) {
+		if (!array_key_exists($location, $allowedPaths)) {
 			if ($location === 'Global') {
 				throw new InvalidArgumentException('Global installation is not allowed!');
 			}
@@ -578,6 +479,58 @@ class ExtensionApiService {
 			}
 			throw new InvalidArgumentException(sprintf('Unknown location "%s"!', $location));
 		}
+
+		$fileContent = GeneralUtility::getUrl($file);
+		if (!$fileContent) {
+			throw new InvalidArgumentException(sprintf('File "%s" is empty!', $file));
+		}
+
+		$fetchData = $this->terConnection->decodeExchangeData($fileContent);
+		if (!is_array($fetchData)) {
+			throw new InvalidArgumentException(sprintf('File "%s" is of a wrong format!', $file));
+		}
+
+		$extensionKey = $fetchData[0]['extKey'];
+		if (!$extensionKey) {
+			throw new InvalidArgumentException(sprintf('File "%s" is of a wrong format!', $file));
+		}
+
+		$return['extKey'] = $extensionKey;
+		$return['version'] = $fetchData[0]['EM_CONF']['version'];
+
+		if (!$overwrite) {
+			$location = ($location === 'G' || $location === 'S') ? $location : 'L';
+			$destinationPath = tx_em_Tools::typePath($location) . $extensionKey . '/';
+			if (@is_dir($destinationPath)) {
+				throw new InvalidArgumentException(sprintf('Extension "%s" already exists at "%s"!', $extensionKey, $destinationPath));
+			}
+		}
+
+		$install = $this->getEmInstall();
+		$content = $install->installExtension($fetchData, $location, null, $file, !$overwrite);
+
+		return $return;
+	}
+
+
+	/**
+	 * Check if an extension exists.
+	 *
+	 * @param string $extensionKey extension key
+	 *
+	 * @return boolean
+	 */
+	protected function extensionExists($extensionKey) {
+		$this->initializeExtensionManagerObjects();
+		$list = $this->listUtility->getAvailableExtensions();
+		$extensionExists = FALSE;
+		foreach ($list as $values) {
+			if ($values['key'] === $extensionKey) {
+				$extensionExists = TRUE;
+				break;
+			}
+		}
+		return $extensionExists;
 	}
 
 	/**
@@ -586,8 +539,20 @@ class ExtensionApiService {
 	 * @return void
 	 */
 	protected function initializeExtensionManagerObjects() {
+//		$this->xmlHandler = GeneralUtility::makeInstance('tx_em_Tools_XmlHandler');
 		$this->listUtility = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\ListUtility');
-		$this->emConfUtility = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\EmConfUtility');
+		$this->installUtility = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\InstallUtility');
+//		$this->terConnection = GeneralUtility::makeInstance('tx_em_Connection_Ter', $this);
+//		$this->extensionDetails = GeneralUtility::makeInstance('tx_em_Extensions_Details', $this);
+	}
+
+	/**
+	 * @return tx_em_Install
+	 */
+	protected function getEmInstall() {
+		$install = GeneralUtility::makeInstance('tx_em_Install', $this);
+		$install->setSilentMode(TRUE);
+		return $install;
 	}
 
 	/**

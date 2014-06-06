@@ -1,7 +1,6 @@
 filter:
     excluded_paths:
         - 'Resources/Public/vendor/*'
-        - 'Tests/*'
 
 tools:
 
@@ -12,11 +11,11 @@ tools:
 
     php_code_sniffer:
         enabled: true
-        command: phpcs -n
         config:
             standard: TYPO3CMS
 
-    php_cs_fixer: false
+    php_cs_fixer:
+        enabled: false
 
     php_mess_detector:
         enabled: true
@@ -28,7 +27,8 @@ tools:
             controversial_rules:
                 superglobals: false
 
-    php_pdepend: true
+    php_pdepend:
+        enabled: true
 
     php_analyzer:
         enabled: true
