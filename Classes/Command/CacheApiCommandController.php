@@ -99,7 +99,7 @@ class CacheApiCommandController extends CommandController {
 	 * @param string|NULL $fileAbsPath The file as absolute path to be cleared or NULL to clear completely.
 	 * @return void
 	 */
-	public function clearAllActiveOpcodeCacheCommand($fileAbsPath = NULL) {
+	public function clearAllActiveOpcodeCachesCommand($fileAbsPath = NULL) {
 		$service = $this->getService();
 		$service->clearAllActiveOpcodeCache($fileAbsPath);
 
