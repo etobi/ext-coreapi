@@ -92,4 +92,21 @@ class CacheApiCommandController extends CommandController {
 	private function getService() {
 		return $this->objectManager->get('Etobi\\CoreAPI\\Service\\CacheApiService');
 	}
+
+	/**
+	 * Clears the opcode cache.
+	 *
+	 * @param string|NULL $fileAbsPath The file as absolute path to be cleared or NULL to clear completely.
+	 * @return void
+	 */
+	public function clearAllActiveOpcodeCache($fileAbsPath = NULL) {
+		$service = $this->getService();
+		$service->clearAllActiveOpcodeCache($fileAbsPath);
+
+		if($fileAbsPath !== NULL){
+			$this->outputLine('The opcode cache for the file ' . $fileAbsPath . ' has been cleared.');
+		} else {
+			$this->outputLine('The complete opcode cache has been cleared.');
+		}
+	}
 }
