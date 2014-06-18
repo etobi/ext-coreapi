@@ -112,4 +112,14 @@ class CacheApiService {
 
 		return $toBeFlushed;
 	}
+
+	/**
+	 * Clears the opcode cache.
+	 *
+	 * @param string|NULL $fileAbsPath The file as absolute path to be cleared or NULL to clear completely.
+	 * @return void
+	 */
+	public function clearAllActiveOpcodeCaches($fileAbsPath = NULL) {
+		\TYPO3\CMS\Core\Utility\OpcodeCacheUtility::clearAllActive($fileAbsPath);
+	}
 }
