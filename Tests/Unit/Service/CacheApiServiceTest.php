@@ -102,6 +102,15 @@ class CacheApiServiceTest extends UnitTestCase {
 
 	/**
 	 * @test
+	 * @covers ::clearSystemCache
+	 */
+	public function clearSystemCacheClearsSystemCache() {
+		$this->dataHandlerMock->expects($this->once())->method('clear_cacheCmd')->with('system');
+		$this->subject->clearSystemCache();
+	}
+
+	/**
+	 * @test
 	 * @covers ::clearAllExceptPageCache
 	 */
 	public function clearAllExceptPageCacheClearsAllExceptPageCache() {
