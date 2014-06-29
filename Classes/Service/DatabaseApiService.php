@@ -208,6 +208,20 @@ class Tx_Coreapi_Service_DatabaseApiService {
 		return $finalKeys;
 	}
 
+	/**
+	 * Import ext_tables_static+adt.sql from extensionmanager
+	 */
+	public function importExtensionManagerRepository() {
+		$rawDefinitions = t3lib_div::getUrl(t3lib_extMgm::extPath('extensionmanager') . 'ext_tables_static+adt.sql');
+		$statements = $this->sqlHandler->getStatementarray($rawDefinitions, 1);
+		foreach ($statements as $statement) {
+			if (trim($statement) !== '') {
+				$GLOBALS['TYPO3_DB']->admin_query($statement);
+			}
+		}
+		return TRUE;
+	}
+
 }
 
 ?>
