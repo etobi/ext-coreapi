@@ -1,0 +1,6 @@
+{
+	"name": "georgringer/coreapi",
+	"version": "0.0.1",
+	"description": "The EXT:coreapi should provide a simple to use API for common core features.",
+	"type": "typo3cms-extension"
+}
