@@ -208,6 +208,44 @@ class Tx_Coreapi_Service_DatabaseApiService {
 		return $finalKeys;
 	}
 
+	/**
+	 * Remove deleted records
+	 *
+	 * @author Christoph Lehmann <post@christophlehmann.eu>
+	 * @param string $age records will be removed when they were deleted before $age
+	 * @throws InvalidArgumentException
+	 * @return string
+	 */
+	public function removeDeletedRecords($age) {
+		if (preg_match("/^[0-9]+(d|m|y)$/", $age) == 0) {
+			throw new InvalidArgumentException('No valid minimum age given');
+		} else {
+			$unit = substr($age, 0, -1);
+			switch (substr($age, -1)) {
+				case "d":
+					$seconds = $unit * 60 * 60 * 24;
+					break;
+				case "m":
+					$seconds = $unit * 60 * 60 * 24 * 30;
+					break;
+				case "y":
+					$seconds = $unit * 60 * 60 * 24 * 7 * 365;
+			}
+		}
+
+		$where = 'deleted=1';
+		if ($seconds > 0) {
+			$tstamp = time() - $seconds;
+			$where .= ' AND tstamp < ' . $tstamp;
+		}
+
+		$tables =  $this->sqlHandler->getFieldDefinitions_database();
+		foreach ($tables as $tableName => $definition) {
+			if (array_key_exists('deleted', $definition['fields']) && array_key_exists('tstamp', $definition['fields'])) {
+				$GLOBALS['TYPO3_DB']->exec_DELETEquery($tableName, $where);
+			}
+		}
+	}
 }
 
 ?>

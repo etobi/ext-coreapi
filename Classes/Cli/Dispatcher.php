@@ -211,6 +211,25 @@ Currently the following commands are supported:
 	}
 
 	/**
+	 * Remove deleted records
+	 *
+	 * Tables need the fields 'deleted' and 'tstamp' to be cleaned
+	 *
+	 * @author Christoph Lehmann <post@christophlehmann.eu>
+	 * @param string $age records will be removed when they were deleted before $age
+	 * @return void
+	 * @example ./cli_dispatch.phpsh coreapi database:removedeletedrecords 30d
+	 */
+	public function databaseRemoveDeletedRecordsCommand($age) {
+		if($age === 'help') {
+			$this->outputLine('Please provide a minimum age like "7d" for 7 days, "4w" for 4 weeks or "2y" for 2 years.');
+		} else {
+			$databaseApiService = $this->getDatabaseApiService();
+			$databaseApiService->removeDeletedRecords($age);
+		}
+	}
+
+	/**
 	 * Information about an extension
 	 *
 	 * Echo's out a table with information about a specific extension
