@@ -11,6 +11,7 @@ return array(
 	'tx_coreapi_service_siteapiservice' => $extensionClassesPath . 'Service/SiteApiService.php',
 	'tx_coreapi_service_databaseapiservice' => $extensionClassesPath . 'Service/DatabaseApiService.php',
 	'tx_coreapi_service_extensionapiservice' => $extensionClassesPath . 'Service/ExtensionApiService.php',
+	'tx_coreapi_service_languageapiservice' => $extensionClassesPath . 'Service/LanguageApiService.php',
 	'tx_coreapi_cli_dispatcher' => $extensionClassesPath .'Cli/Dispatcher.php',
 );
 
