@@ -89,4 +89,25 @@ class CacheApiCommandController extends CommandController {
 		$clearedCaches = $this->cacheApiService->clearAllExceptPageCache();
 		$this->outputLine('Cleared caches: ' . implode(', ', $clearedCaches));
 	}
+
+	/**
+	 * Clear system cache.
+	 *
+	 * @return void
+	 */
+	public function clearSystemCacheCommand() {
+		$service = $this->getService();
+		$service->clearSystemCache();
+
+		$this->outputLine('System cache has been cleared.');
+	}
+
+	/**
+	 * Returns the service object.
+	 *
+	 * @return \Etobi\CoreAPI\Service\CacheApiService object
+	 */
+	private function getService() {
+		return $this->objectManager->get('Etobi\\CoreAPI\\Service\\CacheApiService');
+	}
 }
