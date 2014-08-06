@@ -89,4 +89,14 @@ class CacheApiCommandController extends CommandController {
 		$clearedCaches = $this->cacheApiService->clearAllExceptPageCache();
 		$this->outputLine('Cleared caches: ' . implode(', ', $clearedCaches));
 	}
+
+	/**
+	 * Clear system cache.
+	 *
+	 * @return void
+	 */
+	public function clearSystemCacheCommand() {
+		$this->cacheApiService->clearSystemCache();
+		$this->outputLine('System cache has been cleared.');
+	}
 }
