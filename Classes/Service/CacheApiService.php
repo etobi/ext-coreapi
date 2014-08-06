@@ -134,4 +134,13 @@ class CacheApiService {
 
 		return $toBeFlushed;
 	}
+
+	/**
+	 * Clear the system cache.
+	 *
+	 * @return void
+	 */
+	public function clearSystemCache() {
+		$this->dataHandler->clear_cacheCmd('system');
+	}
 }
