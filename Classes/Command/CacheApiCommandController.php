@@ -89,4 +89,19 @@ class CacheApiCommandController extends CommandController {
 		$clearedCaches = $this->cacheApiService->clearAllExceptPageCache();
 		$this->outputLine('Cleared caches: ' . implode(', ', $clearedCaches));
 	}
+
+	/**
+	 * Clears all active opcode caches.
+	 *
+	 * @param string|NULL $fileAbsPath The file as absolute path to be cleared or NULL to clear completely.
+	 * @return void
+	 */
+	public function clearActiveOpcodeCachesCommand($fileAbsPath = NULL) {
+		$this->cacheApiService->clearAllActiveOpcodeCaches($fileAbsPath);
+		if ($fileAbsPath !== NULL) {
+			$this->outputLine('The opcode cache for the file ' . $fileAbsPath . ' has been cleared.');
+		} else {
+			$this->outputLine('The complete opcode cache has been cleared.');
+		}
+	}
 }
