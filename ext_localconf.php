@@ -7,6 +7,7 @@ if (TYPO3_MODE === 'BE') {
 	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] = 'Etobi\CoreAPI\Command\CacheApiCommandController';
 	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] = 'Etobi\CoreAPI\Command\SiteApiCommandController';
 	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] = 'Etobi\CoreAPI\Command\ExtensionApiCommandController';
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] = 'Etobi\CoreAPI\Command\ConfigurationApiCommandController';
 }
 
 // Register the CLI dispatcher
