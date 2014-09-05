@@ -47,6 +47,12 @@ class CacheApiService {
 	 */
 	protected $objectManager;
 
+
+	/**
+	 * @var \TYPO3\CMS\Install\Service\ClearCacheService
+	 */
+	protected $installToolClearCacheService;
+
 	/**
 	 * @param \TYPO3\CMS\Core\DataHandling\DataHandler $dataHandler
 	 *
@@ -63,6 +69,15 @@ class CacheApiService {
 	 */
 	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManager $objectManager) {
 		$this->objectManager = $objectManager;
+	}
+
+	/**
+	 * @param \TYPO3\CMS\Install\Service\ClearCacheService $installToolClearCacheService
+	 *
+	 * @return void
+	 */
+	public function injectInstallToolClearCacheService(\TYPO3\CMS\Install\Service\ClearCacheService $installToolClearCacheService) {
+		$this->installToolClearCacheService = $installToolClearCacheService;
 	}
 
 	/**
@@ -86,8 +101,8 @@ class CacheApiService {
 	 *
 	 * @return void
 	 */
-	public function clearAllCaches() {
-		$this->dataHandler->clear_cacheCmd('all');
+	public function clearAllCaches($hard = false) {
+		!$hard ? $this->dataHandler->clear_cacheCmd('all') : $this->installToolClearCacheService->clearAll();
 	}
 
 	/**
