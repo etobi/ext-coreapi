@@ -101,7 +101,7 @@ class CacheApiService {
 	 *
 	 * @return void
 	 */
-	public function clearAllCaches($hard = false) {
+	public function clearAllCaches($hard = FALSE) {
 		!$hard ? $this->dataHandler->clear_cacheCmd('all') : $this->installToolClearCacheService->clearAll();
 	}
 
