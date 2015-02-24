@@ -217,7 +217,7 @@ class ExtensionApiCommandController extends CommandController {
 	/**
 	 * Install(activate) a comma separated list of extension.
 	 *
-	 * @param string $key The extension keys, separated by commata
+	 * @param string $keys The extension keys, separated by commata
 	 *
 	 * @return void
 	 */
