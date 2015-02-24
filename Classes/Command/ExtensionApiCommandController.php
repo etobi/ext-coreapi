@@ -215,6 +215,20 @@ class ExtensionApiCommandController extends CommandController {
 	}
 
 	/**
+	 * Install(activate) a comma separated list of extension.
+	 *
+	 * @param string $key The extension keys, separated by commata
+	 *
+	 * @return void
+	 */
+	public function installListCommand($keys) {
+		$keysArray = GeneralUtility::trimExplode(',', $keys, TRUE);
+		foreach ($keysArray as $key) {
+			$this->installCommand($key);
+		}
+	}
+
+	/**
 	 * UnInstall(deactivate) an extension.
 	 *
 	 * @param string $key The extension key
