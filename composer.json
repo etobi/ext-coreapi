@@ -13,5 +13,12 @@
             "name": "Stefano Kowalke"
         }
     ],
+    "extra": {
+        "typo3/cms": {
+            "Package": {
+                "partOfFactoryDefault": true
+            }
+        }
+    },
     "minimum-stability": "dev"
 }
