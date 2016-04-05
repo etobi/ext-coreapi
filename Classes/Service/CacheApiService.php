@@ -35,7 +35,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * @author Stefano Kowalke <blueduck@gmx.net>
  * @package Etobi\CoreAPI\Service\SiteApiService
  */
-class CacheApiService {
+class CacheApiService
+{
 
 	/**
 	 * @var \TYPO3\CMS\Core\DataHandling\DataHandler
@@ -57,7 +58,8 @@ class CacheApiService {
 	 *
 	 * @return void
 	 */
-	public function injectDataHandler(\TYPO3\CMS\Core\DataHandling\DataHandler $dataHandler) {
+	public function injectDataHandler(\TYPO3\CMS\Core\DataHandling\DataHandler $dataHandler)
+	{
 		$this->dataHandler = $dataHandler;
 	}
 
@@ -66,7 +68,8 @@ class CacheApiService {
 	 *
 	 * @return void
 	 */
-	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManager $objectManager) {
+	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManager $objectManager)
+	{
 		$this->objectManager = $objectManager;
 	}
 
@@ -75,7 +78,8 @@ class CacheApiService {
 	 *
 	 * @return void
 	 */
-	public function injectInstallToolClearCacheService(\TYPO3\CMS\Install\Service\ClearCacheService $installToolClearCacheService) {
+	public function injectInstallToolClearCacheService(\TYPO3\CMS\Install\Service\ClearCacheService $installToolClearCacheService)
+	{
 		$this->installToolClearCacheService = $installToolClearCacheService;
 	}
 
@@ -84,7 +88,8 @@ class CacheApiService {
 	 *
 	 * @return void
 	 */
-	public function initializeObject() {
+	public function initializeObject()
+	{
 		// Create a fake admin user
 		$adminUser = $this->objectManager->get('TYPO3\\CMS\\Core\\Authentication\\BackendUserAuthentication');
 		$adminUser->user['uid'] = $GLOBALS['BE_USER']->user['uid'];
@@ -101,7 +106,8 @@ class CacheApiService {
 	 * @param bool $hard
 	 * @return void
 	 */
-	public function clearAllCaches($hard = FALSE) {
+	public function clearAllCaches($hard = FALSE)
+	{
 		!$hard ? $this->dataHandler->clear_cacheCmd('all') : $this->installToolClearCacheService->clearAll();
 	}
 
@@ -110,13 +116,14 @@ class CacheApiService {
 	 *
 	 * @return void
 	 */
-	public function clearPageCache() {
+	public function clearPageCache()
+	{
 		$this->dataHandler->clear_cacheCmd('pages');
 	}
 
 	/**
 	 * Clear the page cache by tag.
-	 * @param string $tag
+	 *
 	 * @return void
 	 */
 	public function clearPageCacheByTag($tag)
@@ -129,16 +136,19 @@ class CacheApiService {
 	 *
 	 * @return void
 	 */
-	public function clearConfigurationCache() {
+	public function clearConfigurationCache()
+	{
 		$this->dataHandler->clear_cacheCmd('temp_cached');
 	}
+
 
 	/**
 	 * Clear the system cache
 	 *
 	 * @return void
 	 */
-	public function clearSystemCache() {
+	public function clearSystemCache()
+	{
 		$this->dataHandler->clear_cacheCmd('system');
 	}
 
@@ -150,7 +160,8 @@ class CacheApiService {
 	 *
 	 * @return void
 	 */
-	public function clearAllActiveOpcodeCache($fileAbsPath = NULL) {
+	public function clearAllActiveOpcodeCache($fileAbsPath = NULL)
+	{
 		$this->clearAllActiveOpcodeCacheWrapper($fileAbsPath);
 	}
 
@@ -161,7 +172,8 @@ class CacheApiService {
 	 *
 	 * @return array with list of cleared caches
 	 */
-	public function clearAllExceptPageCache() {
+	public function clearAllExceptPageCache()
+	{
 		$out = array();
 		$cacheKeys = array_keys($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']);
 		$ignoredCaches = array('cache_pages', 'cache_pagesection');
@@ -182,6 +194,19 @@ class CacheApiService {
 	}
 
 	/**
+	 * Clear processed files
+	 * The sys_file_processedfile table is truncated and the physical files of local storages are deleted.
+	 * @return \TYPO3\CMS\Install\Status\StatusInterface
+	 */
+	public function clearProcessedFiles()
+	{
+		$repository = $this->objectManager->get('\\TYPO3\\CMS\\Core\\Resource\\ProcessedFileRepository');
+		$failedDeletions = $repository->removeAll();
+		return $failedDeletions;
+
+	}
+
+	/**
 	 * Clears the opcode cache. This just wraps the static call for testing purposes.
 	 *
 	 * @param string|NULL $fileAbsPath The file as absolute path to be cleared
@@ -189,7 +214,8 @@ class CacheApiService {
 	 *
 	 * @return void
 	 */
-	protected function clearAllActiveOpcodeCacheWrapper($fileAbsPath) {
+	protected function clearAllActiveOpcodeCacheWrapper($fileAbsPath)
+	{
 		\TYPO3\CMS\Core\Utility\OpcodeCacheUtility::clearAllActive($fileAbsPath);
 	}
 }

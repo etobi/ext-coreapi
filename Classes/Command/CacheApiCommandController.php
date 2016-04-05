@@ -33,7 +33,8 @@ use TYPO3\CMS\Extbase\Mvc\Controller\CommandController;
  * @author Stefano Kowalke <blueduck@gmx.net>
  * @package Etobi\CoreAPI\Service\SiteApiService
  */
-class CacheApiCommandController extends CommandController {
+class CacheApiCommandController extends CommandController
+{
 	/**
 	 * @var \TYPO3\CMS\Core\Log\LogManager $logManager
 	 */
@@ -49,14 +50,16 @@ class CacheApiCommandController extends CommandController {
 	 *
 	 * @return void
 	 */
-	public function injectLogManager(\TYPO3\CMS\Core\Log\LogManager $logManager) {
+	public function injectLogManager(\TYPO3\CMS\Core\Log\LogManager $logManager)
+	{
 		$this->logManager = $logManager;
 	}
 
 	/**
 	 * Initialize the object
 	 */
-	public function initializeObject() {
+	public function initializeObject()
+	{
 		$this->logger = $this->objectManager->get('TYPO3\CMS\Core\Log\LogManager')->getLogger(__CLASS__);
 	}
 
@@ -70,7 +73,8 @@ class CacheApiCommandController extends CommandController {
 	 *
 	 * @param \Etobi\CoreAPI\Service\CacheApiService $cacheApiService
 	 */
-	public function injectCacheApiService(\Etobi\CoreAPI\Service\CacheApiService $cacheApiService) {
+	public function injectCacheApiService(\Etobi\CoreAPI\Service\CacheApiService $cacheApiService)
+	{
 		$this->cacheApiService = $cacheApiService;
 	}
 
@@ -81,7 +85,8 @@ class CacheApiCommandController extends CommandController {
 	 * @param boolean $hard
 	 * @return void
 	 */
-	public function clearAllCachesCommand($hard = false) {
+	public function clearAllCachesCommand($hard = false)
+	{
 		$this->cacheApiService->clearAllCaches($hard);
 		$message = 'All caches have been cleared%s.';
 		$this->logger->info($message);
@@ -93,7 +98,8 @@ class CacheApiCommandController extends CommandController {
 	 *
 	 * @return void
 	 */
-	public function clearSystemCacheCommand() {
+	public function clearSystemCacheCommand()
+	{
 		$this->cacheApiService->clearSystemCache();
 		$message = 'System cache has been cleared';
 		$this->logger->info($message);
@@ -108,7 +114,8 @@ class CacheApiCommandController extends CommandController {
 	 *
 	 * @return void
 	 */
-	public function clearAllActiveOpcodeCacheCommand($fileAbsPath = NULL) {
+	public function clearAllActiveOpcodeCacheCommand($fileAbsPath = NULL)
+	{
 		$this->cacheApiService->clearAllActiveOpcodeCache($fileAbsPath);
 
 		if ($fileAbsPath !== NULL) {
@@ -127,7 +134,8 @@ class CacheApiCommandController extends CommandController {
 	 *
 	 * @return void
 	 */
-	public function clearConfigurationCacheCommand() {
+	public function clearConfigurationCacheCommand()
+	{
 		$this->cacheApiService->clearConfigurationCache();
 		$message = 'Configuration cache has been cleared.';
 		$this->logger->info($message);
@@ -139,7 +147,8 @@ class CacheApiCommandController extends CommandController {
 	 *
 	 * @return void
 	 */
-	public function clearPageCacheCommand() {
+	public function clearPageCacheCommand()
+	{
 		$this->cacheApiService->clearPageCache();
 		$message = 'Page cache has been cleared.';
 		$this->logger->info($message);
@@ -184,10 +193,31 @@ class CacheApiCommandController extends CommandController {
 	 *
 	 * @return void
 	 */
-	public function clearAllExceptPageCacheCommand() {
+	public function clearAllExceptPageCacheCommand()
+	{
 		$clearedCaches = $this->cacheApiService->clearAllExceptPageCache();
 		$message = 'Cleared caches: ' . implode(', ', $clearedCaches);
 		$this->logger->info($message);
 		$this->outputLine($message);
+	}
+
+	/**
+	 * Clear all processsed files (in DB and on disk)
+	 * This is especially useful on big sites when you can't just drop the page cache.
+	 *
+	 * @return void
+	 */
+	public function clearProcessedFilesCommand()
+	{
+		if ($this->cacheApiService->clearProcessedFiles()) {
+			$message = 'Cleared processed files in typo3temp and fileadmin.';
+			$this->logger->info($message);
+			$this->outputLine($message);
+		} else {
+			$message = 'Clearing processed files failed.';
+			$this->logger->info($message);
+			$this->outputLine($message);
+			$this->quit(1);
+		};
 	}
 }
