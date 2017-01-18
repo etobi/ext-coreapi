@@ -372,6 +372,18 @@ class ExtensionApiCommandController extends CommandController {
 	}
 
 	/**
+	 * Create upload folders of all installed extensions.
+	 *
+	 * @return void
+	 */
+	public function createUploadFoldersCommand() {
+		$this->extensionApiService->createUploadFolders();
+		$message = 'Created upload folders of all installed extensions!';
+		$this->outputLine($message);
+		$this->logger->info($message);
+	}
+
+	/**
 	 * Emits packages may have changed signal
 	 *
 	 * @return \Etobi\CoreAPI\Service\ExtensionApiService object

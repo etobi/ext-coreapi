@@ -427,6 +427,25 @@ class ExtensionApiService {
 	}
 
 	/**
+	 * Create upload folders of all installed extensions
+	 *
+	 * @return void
+	 */
+	public function createUploadFolders() {
+		$this->initializeExtensionManagerObjects();
+		$extensions = $this->listUtility->getAvailableAndInstalledExtensionsWithAdditionalInformation();
+
+		/** @var \TYPO3\CMS\Extensionmanager\Utility\FileHandlingUtility $fileHandlingUtility */
+		$fileHandlingUtility = $this->objectManager->get('TYPO3\\CMS\\Extensionmanager\\Utility\\FileHandlingUtility');
+		foreach ($extensions AS $key => $extension) {
+			if ($this->installUtility->isLoaded($key)) {
+				$extension['key'] = $key;
+				$fileHandlingUtility->ensureConfiguredDirectoriesExist($extension);
+			}
+		}
+	}
+
+	/**
 	 * Extracts and returns the file content of the given file
 	 *
 	 * @param string $file The file with file path
